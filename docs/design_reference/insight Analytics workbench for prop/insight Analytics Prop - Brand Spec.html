@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>insight Analytics Prop — Brand Spec</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    /* Surfaces — faint green-neutral (hue 160) */
+    --bg-0: oklch(0.20 0.008 160);
+    --bg-1: oklch(0.235 0.008 160);
+    --bg-2: oklch(0.275 0.009 160);
+    --bg-3: oklch(0.32 0.010 160);
+    --line: oklch(1 0 0 / 0.09);
+    --line-2: oklch(1 0 0 / 0.055);
+    --line-strong: oklch(1 0 0 / 0.16);
+    /* Text */
+    --tx-hi: oklch(0.93 0.004 160);
+    --tx-mid: oklch(0.72 0.006 160);
+    --tx-lo: oklch(0.56 0.006 160);
+    --tx-faint: oklch(0.44 0.006 160);
+    /* Brand — Prop Green(연두) accent */
+    --accent: #93E05F;                 /* 연두 — oklch(0.78 0.165 135) */
+    --accent-hi: oklch(0.86 0.155 132);
+    --accent-deep: oklch(0.62 0.15 140);
+    --accent-soft: oklch(0.78 0.165 135 / 0.16);
+    --accent-line: oklch(0.78 0.165 135 / 0.50);
+    --on-accent: oklch(0.24 0.04 150);
+    /* Heritage + sibling marks */
+    --orange: #E8611A;                 /* "sight" + 로고마크 — 제품군 헤리티지(고정) */
+    --hub-blue: #3F74E8;               /* 형제 제품 — Data hub */
+    /* Data roles */
+    --dim: oklch(0.62 0.12 230);
+    --meas: oklch(0.70 0.14 150);
+    --pos: oklch(0.70 0.15 150);
+    --warn: oklch(0.76 0.15 75);
+    --neg: oklch(0.64 0.18 25);
+    /* Chart palette — green-anchored */
+    --cat-1: oklch(0.78 0.165 135);
+    --cat-2: oklch(0.64 0.12 235);
+    --cat-3: oklch(0.74 0.13 95);
+    --cat-4: oklch(0.68 0.14 300);
+    --cat-5: oklch(0.62 0.15 140);
+    --cat-6: oklch(0.64 0.13 20);
+    --cat-7: oklch(0.62 0.10 200);
+    --cat-8: oklch(0.70 0.17 48);
+
+    --font-ui: "IBM Plex Sans", "IBM Plex Sans KR", system-ui, -apple-system, sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+    --r-sm: 4px; --r-md: 8px; --r-lg: 12px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  ::selection { background: var(--accent-soft); }
+  body {
+    background: var(--bg-0); color: var(--tx-hi);
+    font-family: var(--font-ui); font-size: 16px; line-height: 1.65;
+    -webkit-font-smoothing: antialiased; word-break: keep-all;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 64px 32px 120px; }
+
+  .eyebrow { font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--tx-faint); }
+  h1 { font-size: 32px; font-weight: 700; letter-spacing: -0.5px; margin: 14px 0 10px; color: var(--tx-hi); }
+  .sub { font-size: 13px; color: var(--tx-lo); margin-bottom: 28px; }
+  .sub code { font-family: var(--font-mono); font-size: 12px; color: var(--tx-mid); }
+
+  /* Wordmark display */
+  .wm-display {
+    display: flex; align-items: center; gap: 26px;
+    background: linear-gradient(160deg, var(--bg-2), var(--bg-1));
+    border: 1px solid var(--line); border-radius: var(--r-lg);
+    padding: 38px 40px; margin-bottom: 16px;
+  }
+  .wm { font-size: 42px; font-weight: 700; letter-spacing: -1px; line-height: 1; white-space: nowrap; }
+  .wm .in { color: var(--tx-hi); }
+  .wm .sight { color: var(--orange); }
+  .wm .analytics { color: var(--tx-hi); margin-left: 0.22em; }
+  .wm .prop { color: var(--accent); margin-left: 0.18em; }
+
+  /* Logomark — orange heritage */
+  .logomark {
+    width: 72px; height: 72px; border-radius: 17px; flex-shrink: 0;
+    background: var(--orange); display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 1px 0 oklch(1 0 0 / 0.18) inset, 0 8px 24px -8px oklch(0.70 0.17 47 / 0.5);
+  }
+  .logomark.sm { width: 56px; height: 56px; border-radius: 13px; }
+  .logomark svg { width: 60%; height: 60%; }
+
+  section { margin-top: 56px; }
+  h2 {
+    font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--tx-lo); padding-top: 22px; border-top: 1px solid var(--line-2); margin-bottom: 18px;
+  }
+  p.lead { font-size: 14.5px; color: var(--tx-mid); line-height: 1.75; margin-bottom: 8px; }
+  p.lead b { color: var(--tx-hi); font-weight: 600; }
+  .accent-tx { color: var(--accent); font-weight: 600; }
+  .orange-tx { color: var(--orange); font-weight: 600; }
+
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .wm-card { background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--r-md); overflow: hidden; }
+  .wm-card.primary { border-color: var(--accent-line); }
+  .wm-card .body { padding: 22px 18px; display: flex; align-items: center; min-height: 78px; }
+  .wm-card .foot { display: flex; align-items: center; gap: 8px; padding: 9px 14px; border-top: 1px solid var(--line-2); background: var(--bg-0); }
+  .wm-card .foot .lbl { font-size: 11.5px; color: var(--tx-lo); white-space: nowrap; }
+  .wm-card .foot .tag { margin-left: auto; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 3px; background: var(--accent-soft); color: var(--accent-hi); letter-spacing: 0.04em; }
+  .wm-md { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; white-space: nowrap; }
+  .wm-md .in { color: var(--tx-hi); } .wm-md .sight { color: var(--orange); }
+  .wm-md .analytics { color: var(--tx-hi); margin-left: 0.2em; } .wm-md .prop { color: var(--accent); margin-left: 0.16em; }
+  .wm-md.mono .in, .wm-md.mono .sight, .wm-md.mono .analytics, .wm-md.mono .prop { color: var(--tx-hi); }
+  .note { font-size: 12.5px; color: var(--tx-lo); line-height: 1.7; margin-top: 12px; }
+  .note b { color: var(--tx-mid); }
+
+  .lm-row { display: flex; align-items: flex-start; gap: 20px; }
+  .lm-text { font-size: 13.5px; color: var(--tx-mid); line-height: 1.7; }
+  .lm-text b { color: var(--tx-hi); }
+
+  .dd { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 20px; }
+  .dd-h { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--tx-faint); margin-bottom: 10px; }
+  .dd ul { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+  .dd li { display: flex; align-items: flex-start; gap: 9px; font-size: 13px; color: var(--tx-mid); }
+  .dd .mk { width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px; }
+  .dd .ok .mk { color: var(--pos); } .dd .no .mk { color: var(--neg); }
+
+  .colors { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .col-card { display: flex; border: 1px solid var(--line); border-radius: var(--r-md); overflow: hidden; }
+  .col-swatch { width: 96px; flex-shrink: 0; }
+  .col-meta { padding: 12px 14px; background: var(--bg-1); flex: 1; min-width: 0; }
+  .col-name { font-size: 13px; font-weight: 600; color: var(--tx-hi); }
+  .col-role { font-size: 11.5px; color: var(--tx-lo); margin-bottom: 7px; }
+  .col-hex { font-family: var(--font-mono); font-size: 12.5px; color: var(--tx-hi); }
+  .col-oklch { font-family: var(--font-mono); font-size: 11px; color: var(--tx-faint); }
+
+  .sw-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+  .sw-grid.s4 { grid-template-columns: repeat(5, 1fr); }
+  .sw { border: 1px solid var(--line); border-radius: var(--r-md); overflow: hidden; }
+  .sw .chip { height: 46px; border-bottom: 1px solid var(--line-2); }
+  .sw .meta { padding: 8px 10px; background: var(--bg-1); }
+  .sw .okk { font-family: var(--font-mono); font-size: 10px; color: var(--tx-mid); display: block; word-break: break-all; }
+  .sw .nm { font-size: 11px; color: var(--tx-lo); margin-top: 3px; display: block; }
+
+  .pal { display: flex; border-radius: var(--r-md); overflow: hidden; border: 1px solid var(--line); margin-top: 12px; }
+  .pal span { flex: 1; height: 52px; position: relative; }
+  .pal span::after { content: attr(data-i); position: absolute; bottom: 5px; left: 0; right: 0; text-align: center; font-family: var(--font-mono); font-size: 10px; color: oklch(1 0 0 / 0.7); }
+
+  .typo { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .typo-card { background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--r-md); padding: 22px 24px; }
+  .typo-big { font-size: 27px; font-weight: 600; color: var(--tx-hi); line-height: 1.3; }
+  .typo-big.mono { font-family: var(--font-mono); font-weight: 500; font-size: 23px; }
+  .typo-meta { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line-2); }
+  .typo-fam { font-size: 13px; font-weight: 600; color: var(--tx-hi); }
+  .typo-use { font-size: 11.5px; color: var(--tx-lo); margin-top: 3px; }
+
+  .tbl-wrap { border: 1px solid var(--line); border-radius: var(--r-md); overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; }
+  th { background: var(--bg-2); text-align: left; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--tx-lo); padding: 9px 14px; border-bottom: 1px solid var(--line); }
+  td { padding: 11px 14px; font-size: 13px; color: var(--tx-mid); border-bottom: 1px solid var(--line-2); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  td b { color: var(--tx-hi); font-weight: 600; }
+  .wm-pill { font-size: 15px; font-weight: 700; }
+  .wm-pill .in { color: var(--tx-hi); } .wm-pill .sight { color: var(--orange); }
+  .wm-pill .analytics { color: var(--tx-hi); } .wm-pill .prop { color: var(--accent); }
+  .dot { display: inline-block; width: 11px; height: 11px; border-radius: 3px; vertical-align: -1px; margin-right: 7px; }
+  .mono-sm { font-family: var(--font-mono); font-size: 12px; color: var(--tx-hi); }
+
+  .family { display: flex; align-items: stretch; gap: 0; margin-bottom: 18px; }
+  .fam-card { flex: 1; background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--r-md); padding: 20px 22px; }
+  .fam-card.active { border-color: var(--accent-line); background: linear-gradient(160deg, var(--accent-soft), var(--bg-1)); }
+  .fam-wm { font-size: 19px; font-weight: 700; letter-spacing: -0.5px; }
+  .fam-wm .in { color: var(--tx-hi); }
+  .fam-wm .hub { color: var(--tx-faint); font-size: 0.72em; font-weight: 600; }
+  .fam-sub { font-size: 11.5px; color: var(--tx-lo); margin-top: 7px; }
+  .fam-link { display: flex; align-items: center; justify-content: center; width: 40px; flex-shrink: 0; color: var(--tx-faint); font-size: 18px; }
+
+  pre { background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--r-md); padding: 16px 20px; overflow-x: auto; font-family: var(--font-mono); font-size: 12.5px; line-height: 1.75; color: var(--tx-mid); margin-top: 12px; }
+  pre .c { color: var(--tx-faint); }
+  pre .k { color: var(--accent-hi); }
+  pre .s { color: var(--meas); }
+  pre .b { color: var(--hub-blue); }
+  pre .g { color: var(--accent); }
+  pre .o { color: var(--orange); }
+
+  .summary { margin-top: 22px; font-size: 13px; color: var(--tx-lo); line-height: 1.8; }
+  .summary b { color: var(--tx-hi); }
+  .summary .sight { color: var(--orange); font-weight: 600; }
+  .summary .prop { color: var(--accent); font-weight: 600; }
+
+  @media (max-width: 720px) {
+    .grid-3, .colors, .typo, .sw-grid, .sw-grid.s4, .dd { grid-template-columns: 1fr 1fr; }
+    .family { flex-direction: column; gap: 12px; } .fam-link { width: auto; height: 28px; transform: rotate(90deg); }
+    .wm { font-size: 30px; } .wm-display { flex-direction: column; align-items: flex-start; gap: 18px; }
+  }
+</style>
+</head>
+<template id="__bundler_thumbnail" data-bg-color="#1b201b">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <rect x="468" y="284" width="264" height="264" rx="60" fill="#E8611A"></rect>
+    <g stroke="#ffffff" stroke-width="20" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M536 360 V472 H648"></path>
+      <path d="M560 444 L596 408 L622 424 L660 376"></path>
+    </g>
+    <circle cx="660" cy="376" r="18" fill="#ffffff"></circle>
+    <rect x="700" y="520" width="64" height="64" rx="16" fill="#93E05F"></rect>
+  </svg>
+</template>
+<body>
+<div class="wrap">
+
+  <!-- Hero -->
+  <div class="eyebrow">Insight 제품군 · 브랜드 스펙</div>
+  <h1>insight Analytics Prop — Brand Spec</h1>
+  <div class="sub">v1.0 · 2026·06 · insight Analytics의 부동산(Prop) 에디션 · 다른 씬·문서에 그대로 복사해 사용하세요.</div>
+
+  <div class="wm-display">
+    <div class="logomark">
+      <svg viewBox="0 0 48 48" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M13 12 V35 H36" />
+        <path d="M17 30 L24 24 L29 27 L36 16" stroke-opacity="0.92" />
+        <circle cx="36" cy="16" r="3.6" fill="#fff" stroke="none" />
+      </svg>
+    </div>
+    <div class="wm"><span class="in">in</span><span class="sight">sight</span><span class="analytics">Analytics</span><span class="prop">Prop</span></div>
+  </div>
+
+  <!-- 의미 & 컨셉 -->
+  <section>
+    <h2>의미 &amp; 컨셉</h2>
+    <p class="lead">
+      <b>insight Analytics Prop</b>는 분양대행사 마케팅 기획 담당자가 설치 없이 브라우저에서 부동산 데이터를 <b>수집·정제·분석·시각화</b>하고 시장조사 보고서·분양 제안서까지 한 흐름으로 만드는 <b>로컬-퍼스트 부동산 분석 워크벤치</b>입니다.
+    </p>
+    <p class="lead">
+      <b>insight Analytics</b>의 부동산(Property) 에디션으로, 형제 제품의 <span class="orange-tx">sight</span> 주황 헤리티지와 <b>The Insight Point</b> 로고마크를 그대로 계승합니다. 여기에 부동산 도메인을 뜻하는 <span class="accent-tx">Prop</span>을 <b>연두색</b>으로 더해 에디션을 구분합니다. 주황은 제품군 헤리티지(고정), <span class="accent-tx">연두</span>는 이 에디션의 UI accent 색입니다.
+    </p>
+  </section>
+
+  <!-- 로고 — 워드마크 -->
+  <section>
+    <h2>로고 — 워드마크</h2>
+    <div class="grid-3">
+      <div class="wm-card primary">
+        <div class="body"><span class="wm-md"><span class="in">in</span><span class="sight">sight</span><span class="analytics">Analytics</span><span class="prop">Prop</span></span></div>
+        <div class="foot"><span class="lbl">기본 · 소문자 · 공백 구분</span><span class="tag">표준</span></div>
+      </div>
+      <div class="wm-card">
+        <div class="body"><span class="wm-md"><span class="in">in</span><span class="sight">sight</span><span class="prop">Prop</span></span></div>
+        <div class="foot"><span class="lbl">컴팩트 · 좁은 공간</span></div>
+      </div>
+      <div class="wm-card">
+        <div class="body"><span class="wm-md mono"><span class="in">in</span><span class="sight">sight</span><span class="analytics">Analytics</span><span class="prop">Prop</span></span></div>
+        <div class="foot"><span class="lbl">단색 · 음각/워터마크</span></div>
+      </div>
+    </div>
+    <p class="note">
+      표준 표기는 <b>소문자 · 공백 구분</b>입니다. 부모 제품 <b>insight Analytics</b>를 그대로 두고, 도메인 단어 <b>Prop</b>만 연두로 표기해 에디션을 만듭니다. 컴팩트형은 <b>insight Prop</b>으로 줄여 좁은 공간(파비콘 옆·앱바)에 사용합니다. 단색 버전은 색을 쓸 수 없는 음각·워터마크·단일 잉크 인쇄에만 사용합니다.
+    </p>
+  </section>
+
+  <!-- 로고마크 -->
+  <section>
+    <h2>로고마크</h2>
+    <div class="lm-row">
+      <div class="logomark sm">
+        <svg viewBox="0 0 48 48" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M13 12 V35 H36" />
+          <path d="M17 30 L24 24 L29 27 L36 16" stroke-opacity="0.92" />
+          <circle cx="36" cy="16" r="3.6" fill="#fff" stroke="none" />
+        </svg>
+      </div>
+      <div class="lm-text">
+        <b>The Insight Point</b> — 축(axis) 위로 상승하는 데이터 궤적이 하나의 <b>초점(focal point)</b>으로 수렴하는 형태. <em>분석(Analytics)</em>과 <em>통찰(sight)</em>을 한 글자에 담습니다. 심볼은 제품군 공통 자산이므로 <b>주황 헤리티지</b>를 그대로 유지합니다 — 라운드 스퀘어(반경 17/72 ≈ 23%) 배경에 흰색 3.4pt 스트로크, 마지막 점만 채워 "발견의 순간"을 강조합니다. 파비콘·앱 아이콘·레일 마크에 그대로 사용합니다.
+      </div>
+    </div>
+    <div class="dd">
+      <div>
+        <div class="dd-h">권장</div>
+        <ul>
+          <li class="ok"><svg class="mk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>심볼은 주황 헤리티지 고정 (제품군 공통)</li>
+          <li class="ok"><svg class="mk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>제품 구분은 워드마크의 Prop(연두)으로</li>
+          <li class="ok"><svg class="mk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>최소 여백 = 마크 높이의 25% 유지</li>
+        </ul>
+      </div>
+      <div>
+        <div class="dd-h">지양</div>
+        <ul>
+          <li class="no"><svg class="mk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>심볼을 연두/타 색으로 바꿔 변형</li>
+          <li class="no"><svg class="mk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>"sight" 주황을 경고·오류 의미로 사용</li>
+          <li class="no"><svg class="mk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>궤적·초점 점 제거하거나 회전</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 브랜드 컬러 -->
+  <section>
+    <h2>브랜드 컬러</h2>
+    <div class="colors">
+      <div class="col-card">
+        <div class="col-swatch" style="background:#93E05F"></div>
+        <div class="col-meta">
+          <div class="col-name">Prop Green <span style="color:var(--tx-faint);font-weight:400;font-size:.85em">· 연두</span></div>
+          <div class="col-role">기본 accent · "Prop" · 부동산 에디션</div>
+          <div class="col-hex">#93E05F</div>
+          <div class="col-oklch">oklch(0.78 0.165 135)</div>
+        </div>
+      </div>
+      <div class="col-card">
+        <div class="col-swatch" style="background:oklch(0.86 0.155 132)"></div>
+        <div class="col-meta">
+          <div class="col-name">Green Hi</div>
+          <div class="col-role">hover · 강조 텍스트 · 다크 위 대비</div>
+          <div class="col-hex">accent-hi</div>
+          <div class="col-oklch">oklch(0.86 0.155 132)</div>
+        </div>
+      </div>
+      <div class="col-card">
+        <div class="col-swatch" style="background:var(--accent-soft)"></div>
+        <div class="col-meta">
+          <div class="col-name">Green Soft</div>
+          <div class="col-role">선택 배경 · 뱃지 · 액티브 칩</div>
+          <div class="col-hex">accent-soft</div>
+          <div class="col-oklch">oklch(0.78 0.165 135 / .16)</div>
+        </div>
+      </div>
+      <div class="col-card">
+        <div class="col-swatch" style="background:#E8611A"></div>
+        <div class="col-meta">
+          <div class="col-name">Heritage Orange <span style="color:var(--tx-faint);font-weight:400;font-size:.85em">· 헤리티지</span></div>
+          <div class="col-role">"sight" + 로고마크 · 제품군 공통(고정)</div>
+          <div class="col-hex">#E8611A</div>
+          <div class="col-oklch">oklch(0.70 0.17 47)</div>
+        </div>
+      </div>
+    </div>
+
+    <p class="note" style="margin-top:18px"><b>차트 카테고리 팔레트</b> — 연두를 1번 앵커로 8색이 일정한 채도로 조화를 이룹니다. 주황은 8번(헤리티지)으로만 등장하며 경고·오류 의미로 쓰지 않습니다.</p>
+    <div class="pal">
+      <span data-i="1" style="background:var(--cat-1)"></span>
+      <span data-i="2" style="background:var(--cat-2)"></span>
+      <span data-i="3" style="background:var(--cat-3)"></span>
+      <span data-i="4" style="background:var(--cat-4)"></span>
+      <span data-i="5" style="background:var(--cat-5)"></span>
+      <span data-i="6" style="background:var(--cat-6)"></span>
+      <span data-i="7" style="background:var(--cat-7)"></span>
+      <span data-i="8" style="background:var(--cat-8)"></span>
+    </div>
+  </section>
+
+  <!-- 표면 · 텍스트 -->
+  <section>
+    <h2>표면 · 텍스트 (다크 테마)</h2>
+    <div class="sw-grid">
+      <div class="sw"><div class="chip" style="background:var(--bg-0)"></div><div class="meta"><span class="okk">oklch(.20 .008 160)</span><span class="nm">bg-0 · 앱 배경</span></div></div>
+      <div class="sw"><div class="chip" style="background:var(--bg-1)"></div><div class="meta"><span class="okk">oklch(.235 .008 160)</span><span class="nm">bg-1 · 패널</span></div></div>
+      <div class="sw"><div class="chip" style="background:var(--bg-2)"></div><div class="meta"><span class="okk">oklch(.275 .009 160)</span><span class="nm">bg-2 · 입력/raised</span></div></div>
+      <div class="sw"><div class="chip" style="background:var(--bg-3)"></div><div class="meta"><span class="okk">oklch(.32 .010 160)</span><span class="nm">bg-3 · 호버/칩</span></div></div>
+      <div class="sw"><div class="chip" style="background:var(--tx-hi)"></div><div class="meta"><span class="okk">oklch(.93 .004 160)</span><span class="nm">tx-hi · 본문</span></div></div>
+      <div class="sw"><div class="chip" style="background:var(--tx-mid)"></div><div class="meta"><span class="okk">oklch(.72 .006 160)</span><span class="nm">tx-mid</span></div></div>
+      <div class="sw"><div class="chip" style="background:var(--tx-lo)"></div><div class="meta"><span class="okk">oklch(.56 .006 160)</span><span class="nm">tx-lo · 레이블</span></div></div>
+      <div class="sw"><div class="chip" style="background:var(--tx-faint)"></div><div class="meta"><span class="okk">oklch(.44 .006 160)</span><span class="nm">tx-faint · 보조</span></div></div>
+      <div class="sw"><div class="chip" style="background:var(--line-strong)"></div><div class="meta"><span class="okk">white / .16</span><span class="nm">line-strong</span></div></div>
+      <div class="sw"><div class="chip" style="background:var(--line)"></div><div class="meta"><span class="okk">white / .09</span><span class="nm">line · 구분선</span></div></div>
+    </div>
+    <p class="note">표면은 hue 160(연두-중립)으로 약하게 틴트해 형제 제품(주황=따뜻한 중립, 블루=차가운 중립)과 미묘하게 구분됩니다. 흰·검의 채도는 0.01 이하로 유지합니다.</p>
+  </section>
+
+  <!-- 상태 · 데이터 타입 -->
+  <section>
+    <h2>상태 · 데이터 타입</h2>
+    <div class="sw-grid s4">
+      <div class="sw"><div class="chip" style="background:var(--pos)"></div><div class="meta"><span class="okk">oklch(.70 .15 150)</span><span class="nm">pos · 성공/상승</span></div></div>
+      <div class="sw"><div class="chip" style="background:var(--warn)"></div><div class="meta"><span class="okk">oklch(.76 .15 75)</span><span class="nm">warn · 경고/이상치</span></div></div>
+      <div class="sw"><div class="chip" style="background:var(--neg)"></div><div class="meta"><span class="okk">oklch(.64 .18 25)</span><span class="nm">neg · 오류/하락</span></div></div>
+      <div class="sw"><div class="chip" style="background:var(--dim)"></div><div class="meta"><span class="okk">oklch(.62 .12 230)</span><span class="nm">dim · 차원(범주)</span></div></div>
+      <div class="sw"><div class="chip" style="background:var(--meas)"></div><div class="meta"><span class="okk">oklch(.70 .14 150)</span><span class="nm">meas · 측정값(수치)</span></div></div>
+    </div>
+    <p class="note"><span class="dot" style="background:var(--dim)"></span><b style="color:var(--tx-mid)">Dimension</b> (범주형, 차가운 파랑) 과 <span class="dot" style="background:var(--meas)"></span><b style="color:var(--tx-mid)">Measure</b> (수치형, 초록) 의 색 역할은 그리드·셸프·차트 전반에서 고정됩니다. measure 초록은 accent 연두와 hue를 가까이 두되 채도·명도를 낮춰 구분합니다.</p>
+  </section>
+
+  <!-- 타이포그래피 -->
+  <section>
+    <h2>타이포그래피</h2>
+    <div class="typo">
+      <div class="typo-card">
+        <div class="typo-big">insight Analytics Prop</div>
+        <div class="typo-big">래미안 송도 더퍼스트</div>
+        <div class="typo-meta">
+          <div class="typo-fam">IBM Plex Sans / IBM Plex Sans KR</div>
+          <div class="typo-use">UI 전반 · 워드마크 · 본문 (400/500/600/700)</div>
+        </div>
+      </div>
+      <div class="typo-card">
+        <div class="typo-big mono">price_per_py</div>
+        <div class="typo-big mono">2,100 만원/평</div>
+        <div class="typo-meta">
+          <div class="typo-fam">IBM Plex Mono</div>
+          <div class="typo-use">평당가·세대수·필드키·토큰 (tabular-nums)</div>
+        </div>
+      </div>
+    </div>
+    <p class="note">고밀도 데이터 툴 기준 — 본문 13px, 레이블 10~11px, 컴팩트 행 높이 28px. 금액·면적·세대수는 항상 <b>tabular-nums</b>로 정렬하고, 긴 한글 사업지명은 <code style="font-family:var(--font-mono);font-size:12px;color:var(--accent-hi)">word-break: keep-all</code>을 적용합니다.</p>
+  </section>
+
+  <!-- 워드마크 색상 역할 -->
+  <section>
+    <h2>워드마크 색상 역할</h2>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>구성</th><th>색상</th><th>역할</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="wm-pill"><span class="in">in</span></span></td>
+            <td><span class="mono-sm">tx-hi (흰/다크)</span></td>
+            <td>조용히 시작하는 전치사 — 소문자로 겸손하게</td>
+          </tr>
+          <tr>
+            <td><span class="wm-pill"><span class="sight">sight</span></span></td>
+            <td><span class="mono-sm">#E8611A · 주황</span></td>
+            <td><b>제품군 헤리티지</b> — 시각 · 통찰 · 발견 (고정)</td>
+          </tr>
+          <tr>
+            <td><span class="wm-pill"><span class="analytics">Analytics</span></span></td>
+            <td><span class="mono-sm">tx-hi · 본문</span></td>
+            <td>부모 제품 라인 — 분석 워크벤치</td>
+          </tr>
+          <tr>
+            <td><span class="wm-pill"><span class="prop">Prop</span></span></td>
+            <td><span class="mono-sm">#93E05F · 연두</span></td>
+            <td><b>이 에디션의 핵심</b> — 부동산(Property) 도메인</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 제품군 관계 -->
+  <section>
+    <h2>제품군 관계</h2>
+    <div class="family">
+      <div class="fam-card">
+        <div class="fam-wm"><span class="in">in</span><span style="color:var(--orange)">sight</span> <span style="color:var(--tx-hi)">Analytics</span></div>
+        <div class="fam-sub">Analytics Workbench — 주황 · 데이터 분석·시각화</div>
+      </div>
+      <div class="fam-link">·</div>
+      <div class="fam-card">
+        <div class="fam-wm"><span class="in">in</span><span style="color:var(--orange)">sight</span> <span style="color:var(--hub-blue)">Data</span><span class="hub"> hub</span></div>
+        <div class="fam-sub">Data Hub — 블루 · 데이터 수집·공급</div>
+      </div>
+      <div class="fam-link">·</div>
+      <div class="fam-card active">
+        <div class="fam-wm"><span class="in">in</span><span style="color:var(--orange)">sight</span> <span style="color:var(--tx-hi)">Analytics</span> <span style="color:var(--accent)">Prop</span></div>
+        <div class="fam-sub">Analytics Prop — 연두 · 부동산 분양 기획 (NEW)</div>
+      </div>
+    </div>
+    <p class="lead" style="font-size:13.5px">
+      세 제품은 <b>insight</b> 워드마크 · <span class="orange-tx">sight</span> 주황 · The Insight Point 로고마크 · IBM Plex 서체 · 고밀도 레이아웃을 공유합니다. 제품 색(<span class="orange-tx">분석=주황</span> · <span style="color:var(--hub-blue);font-weight:600">수집=블루</span> · <span class="accent-tx">부동산=연두</span>)으로 역할을 구분합니다. <b>Analytics Prop</b>은 Analytics의 부동산 도메인 특화 에디션입니다.
+    </p>
+  </section>
+
+  <!-- 부록 — 복사용 토큰 -->
+  <section>
+    <h2>부록 — 복사용 토큰</h2>
+    <pre><span class="c">/* CSS custom properties — 다른 프로젝트에 붙여넣기 */</span>
+<span class="k">:root</span> {
+  <span class="g">--accent</span>:       <span class="g">#93E05F</span>;  <span class="c">/* oklch(0.78 0.165 135) — 연두 / "Prop" */</span>
+  <span class="g">--accent-hi</span>:    oklch(0.86 0.155 132);
+  <span class="g">--accent-soft</span>:  oklch(0.78 0.165 135 / 0.16);
+  <span class="g">--on-accent</span>:    oklch(0.24 0.04 150);  <span class="c">/* 연두 위 텍스트 */</span>
+  <span class="o">--orange</span>:       <span class="o">#E8611A</span>;  <span class="c">/* "sight" + 로고마크 — 헤리티지(고정) */</span>
+  <span class="b">--hub-blue</span>:     <span class="b">#3F74E8</span>;  <span class="c">/* 형제 제품 insight Data hub */</span>
+  <span class="g">--font-ui</span>:   <span class="s">"IBM Plex Sans"</span>, <span class="s">"IBM Plex Sans KR"</span>, system-ui, sans-serif;
+  <span class="g">--font-mono</span>: <span class="s">"IBM Plex Mono"</span>, ui-monospace, monospace;
+}</pre>
+    <pre><span class="c">&lt;!-- 워드마크 HTML (표준 표기) --&gt;</span>
+<span class="k">&lt;span</span> class=<span class="s">"wm"</span><span class="k">&gt;</span>
+  <span class="k">&lt;span</span> style=<span class="s">"color:#E9EAEC"</span><span class="k">&gt;</span>in<span class="k">&lt;/span&gt;</span>          <span class="c">&lt;!-- in: 기본 텍스트(tx-hi) --&gt;</span>
+  <span class="k">&lt;span</span> style=<span class="s">"color:#E8611A"</span><span class="k">&gt;</span>sight<span class="k">&lt;/span&gt;</span>       <span class="c">&lt;!-- sight: 주황 헤리티지 --&gt;</span>
+  <span class="k">&lt;span</span> style=<span class="s">"color:#E9EAEC"</span><span class="k">&gt;</span> Analytics<span class="k">&lt;/span&gt;</span>   <span class="c">&lt;!-- 부모 라인 --&gt;</span>
+  <span class="k">&lt;span</span> style=<span class="s">"color:#93E05F"</span><span class="k">&gt;</span> Prop<span class="k">&lt;/span&gt;</span>        <span class="c">&lt;!-- Prop: 연두 도메인 --&gt;</span>
+<span class="k">&lt;/span&gt;</span></pre>
+
+    <div class="summary">
+      <b>한 줄 요약:</b> <span class="sight">insight</span> Analytics <span class="prop">Prop</span> = 분양 기획 전용 로컬-퍼스트 부동산 분석 워크벤치 · 워드마크 <b>in</b> + <span class="sight">sight</span>(주황 헤리티지) + <b>Analytics</b> + <span class="prop">Prop</span>(연두 #93E05F) · 심볼은 주황 The Insight Point 공통 · IBM Plex · 형제 제품 insight Analytics · Data hub와 한 가족.
+    </div>
+  </section>
+
+</div>
+</body>
+</html>

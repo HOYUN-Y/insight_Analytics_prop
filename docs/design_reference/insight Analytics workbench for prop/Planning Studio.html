@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>insight Analytics Prop — Planning Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="css/tokens.css" />
+<link rel="stylesheet" href="css/shell.css" />
+<link rel="stylesheet" href="css/drafts.css" />
+<link rel="stylesheet" href="css/modules.css" />
+<style>
+  html, body { margin: 0; height: 100%; background: var(--bg-0); overflow: hidden; }
+  /* fixed 1440x900 canvas, scaled to fit viewport, letterboxed on black */
+  #stage { position: fixed; inset: 0; background: #000; display: grid; place-items: center; }
+  #frame { width: 1440px; height: 900px; transform-origin: center center; box-shadow: 0 20px 80px -20px rgba(0,0,0,.7); }
+  .fade { animation: fadeIn .22s ease; }
+  @keyframes fadeIn { from { transform: translateY(4px); } to { transform: none; } }
+</style>
+</head>
+<body>
+<div id="stage"><div id="frame"></div></div>
+
+<template id="__bundler_thumbnail">
+  <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100" height="100" rx="20" fill="#221a14" />
+    <g transform="translate(28 30)"><path d="M2 36V6M2 36h42M14 28l10-12 8 6 12-16" fill="none" stroke="#E8611A" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" /></g>
+  </svg>
+</template>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="js/icons.jsx"></script>
+<script type="text/babel" src="js/planStore.jsx"></script>
+<script type="text/babel" src="js/shell.jsx"></script>
+<script type="text/babel" src="js/pages.jsx"></script>
+<script type="text/babel" src="js/draftA.jsx"></script>
+<script type="text/babel" src="js/draftB.jsx"></script>
+<script type="text/babel" src="js/draftC.jsx"></script>
+<script type="text/babel" src="js/hub.jsx"></script>
+<script type="text/babel" src="js/study.jsx"></script>
+<script src="js/redata.js"></script>
+<script type="text/babel" src="js/regrid.jsx"></script>
+<script type="text/babel" src="js/dataStudio.jsx"></script>
+<script type="text/babel" src="js/cleanStudio.jsx"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
+<script type="text/babel" src="js/vizStudio.jsx"></script>
+<script type="text/babel" src="js/mapStudio.jsx"></script>
+
+<script type="text/babel">
+  const { useState, useEffect } = React;
+
+  function ModuleStub({ id }) {
+    const META = {
+      data: ['data', 'Data Studio', 'CSV·XLSX·JSON import + 부동산 조사 템플릿 + 수기 입력'],
+      clean: ['clean', 'Clean / 전처리', '결측·중복·이상치 정리 · 금액/면적 단위 변환 · 파생 컬럼'],
+      chart: ['chart', 'Visualization', '차트 빌더 — Bar·Line·Scatter·Radar·Positioning Matrix'],
+      map: ['map', 'Map', '사업지·경쟁단지·입지시설 지도 + 반경 분석'],
+      report: ['report', 'Report Builder', 'Plan ▸ 산출물 ▸ Report Builder 에서 작성합니다'],
+    };
+    const m = META[id] || ['planning', id, ''];
+    return (
+      <div className="center"><div className="modstub">
+        <div className="ms-ic">{window.Ic(m[0], 28)}</div>
+        <div className="ms-t">{m[1]}</div>
+        <div className="ms-s">{m[2]}</div>
+        <div className="ms-s" style={{ fontSize: 11 }}>이 모듈 화면은 다음 단계에서 설계합니다.</div>
+      </div></div>
+    );
+  }
+
+  function PlanningStudio() {
+    const [module, setModule] = useState('planning');
+    const [view, setView] = useState(() => localStorage.getItem('ps-view') || 'docs');
+    useEffect(() => { localStorage.setItem('ps-view', view); }, [view]);
+
+    let body, ctxSub, showView = false;
+    if (module === 'planning') {
+      const Body = view === 'dash' ? window.ABody : view === 'board' ? window.BBody : window.CBody;
+      body = <Body />; showView = true;
+      ctxSub = view === 'board' ? '전략 보드 · 자유 캔버스' : '인천 연수구 송도동 · 아파트 1,204세대';
+    } else if (module === 'api') {
+      body = <window.HubBody />; ctxSub = 'API Data Hub · 데이터 수집';
+    } else if (module === 'analysis') {
+      body = <window.StudyBody />; ctxSub = 'Real Estate Analysis · 부동산 분석';
+    } else if (module === 'data') {
+      body = <window.DataStudioBody />; ctxSub = 'Data Studio · 데이터 정리';
+    } else if (module === 'clean') {
+      body = <window.CleanStudioBody />; ctxSub = 'Cleaning Studio · 전처리';
+    } else if (module === 'chart') {
+      body = <window.VizStudioBody />; ctxSub = 'Visualization · 차트 빌더';
+    } else if (module === 'map') {
+      body = <window.MapStudioBody />; ctxSub = 'Map · 입지 분석';
+    } else {
+      body = <ModuleStub id={module} />; ctxSub = '인천 연수구 송도동 · 아파트 1,204세대';
+    }
+
+    const nav = (id) => {
+      if (id === 'report') { setModule('planning'); setView('docs'); window.PlanStore.actions.setPage('report'); }
+      else setModule(id);
+    };
+
+    return (
+      <window.Shell active={module} onNav={nav} view={showView ? view : null} setView={setView} ctxSub={ctxSub}>
+        {body}
+      </window.Shell>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById('frame')).render(<PlanningStudio />);
+
+  // scale fixed 1440x900 frame to fit viewport
+  function fit() {
+    const f = document.getElementById('frame');
+    const s = Math.min(window.innerWidth / 1440, window.innerHeight / 900);
+    f.style.transform = 'scale(' + s + ')';
+  }
+  window.addEventListener('resize', fit); fit();
+</script>
+</body>
+</html>

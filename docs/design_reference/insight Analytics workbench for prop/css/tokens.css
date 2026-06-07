@@ -1,0 +1,88 @@
+/* ============================================================
+   insight Analytics Prop — Design Tokens  (Brand Spec ver2)
+   Cool navy-grey surfaces · 연두(green) accent · orange logomark.
+   Wordmark: in · sight(navy) · Analytics(orange) · Prop(green)
+   ============================================================ */
+
+:root {
+  --font-ui: "IBM Plex Sans", "IBM Plex Sans KR", system-ui, -apple-system, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  --fs-9: 9px; --fs-10: 10px; --fs-11: 11px; --fs-12: 12px; --fs-13: 13px;
+  --fs-14: 14px; --fs-16: 16px; --fs-19: 19px; --fs-24: 24px; --fs-32: 32px;
+
+  --r-xs: 3px; --r-sm: 4px; --r-md: 6px; --r-lg: 9px; --r-xl: 14px;
+
+  --row-h: 28px; --topbar-h: 44px; --rail-w: 52px; --panel-pad: 10px; --tab-h: 34px;
+
+  /* brand marks */
+  --orange: #fb8a44;   /* Analytics word + logomark — 헤리티지 계승 */
+  --navy:   #7ba1fc;   /* "sight" */
+
+  --pos: #79e0a8;
+  --neg: #f08e86;
+  --warn: #d8b673;
+}
+
+/* ---------------- DARK (default) ---------------- */
+:root, [data-theme="dark"] {
+  --bg-0: #12151c;   /* app backdrop */
+  --bg-1: #181c24;   /* panels */
+  --bg-2: #20252f;   /* raised / inputs */
+  --bg-3: #2a303b;   /* hover / chips */
+  --bg-hover: rgba(255,255,255,0.045);
+
+  --line: #2a303b;
+  --line-2: #20252f;
+  --line-strong: #353c49;
+
+  --tx-hi: #d6dbe4;
+  --tx-mid: #9aa3b2;
+  --tx-lo: #6f7888;
+  --tx-faint: #565d6a;
+
+  /* GREEN(연두) accent */
+  --accent:      #98da6a;
+  --accent-hi:   #b3e88c;
+  --accent-deep: #43963c;
+  --accent-soft: rgba(152, 218, 106, 0.15);
+  --accent-line: rgba(152, 218, 106, 0.45);
+  --on-accent:   #11210e;
+  --bg-active: var(--accent-soft);
+
+  /* semantic field roles */
+  --dim-color: #789bef;
+  --dim-soft:  rgba(120, 155, 239, 0.16);
+  --meas-color: #87ce5b;
+  --meas-soft:  rgba(135, 206, 91, 0.16);
+
+  --grid-line: rgba(255,255,255,0.06);
+  --shadow-1: 0 1px 2px rgba(0,0,0,0.45);
+  --shadow-2: 0 6px 22px -6px rgba(0,0,0,0.6);
+  --shadow-pop: 0 12px 38px -8px rgba(0,0,0,0.7);
+  color-scheme: dark;
+}
+
+/* sticky-note / canvas accents (Planning OS) */
+:root {
+  --note-green:  #cdeeae;
+  --note-amber:  #ecd9a3;
+  --note-blue:   #b9cdfb;
+  --note-pink:   #efc2d2;
+  --note-violet: #d6c0ec;
+
+  --swot-s: #87ce5b;   /* strength — green */
+  --swot-w: #e1815c;   /* weakness — coral */
+  --swot-o: #789bef;   /* opportunity — navy */
+  --swot-t: #d8b673;   /* threat — gold */
+
+  /* categorical chart palette (ver2 CHART) */
+  --cat-1: #789bef;
+  --cat-2: #b886da;
+  --cat-3: #dd7aa1;
+  --cat-4: #e1815c;
+  --cat-5: #c2982a;
+  --cat-6: #81af54;
+  --cat-7: #07b89b;
+  --cat-8: #00b0d7;
+}
