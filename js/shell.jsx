@@ -159,9 +159,9 @@
     const mode = useStore((s) => s.mode);
     if (mode !== "planning") return null;
     const VIEWS = [
-      { id: "docs",      label: "문서",    icon: "report" },
-      { id: "dashboard", label: "대시보드", icon: "dashboard" },
-      { id: "board",     label: "보드",    icon: "grid" },
+      { id: "docs",      label: "문서",    icon: "doc" },
+      { id: "dashboard", label: "대시보드", icon: "grid" },
+      { id: "board",     label: "보드",    icon: "node" },
     ];
     return (
       <div className="vsw">
