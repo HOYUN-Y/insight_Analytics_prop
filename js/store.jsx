@@ -53,6 +53,11 @@
     decisions: [
       { id: 'dec_1', title: '84타입 단일 평형 전략 유지', rationale: '면적 다양화 시 분양가 책정 복잡도 증가 및 공사비 상승 우려. 소형 분산보다 84 집중이 시장 흡수력 높음.', tag: '전략', createdAt: '2026-05-20', status: 'active' },
     ],
+    sources: [
+      { id: 'src_1', title: '천안시 공동주택 분양 현황 (2025)', url: '', type: '정부기관', trust: 'A', createdAt: '2026-05-10' },
+      { id: 'src_2', title: '인근 경쟁단지 청약 결과 분석', url: '', type: '내부자료', trust: 'B', createdAt: '2026-05-12' },
+    ],
+    report: {},
     datasets: [], charts: [],
     insights: [
       { id: 'ins_1', title: '성성 생활권 호수공원 조망 프리미엄 확인', body: '호수공원 직접 조망 세대는 비조망 동 대비 약 15~20% 높은 실거래가 형성. 고층 판상형 배치 최대화 필요.', tag: '입지', star: 5, createdAt: '2026-05-15' },
@@ -178,7 +183,7 @@
         id: "proj_" + uid(), createdAt: now(), updatedAt: now(),
         type: "apartment", saleMethod: "general", stage: "planning",
         objectives: [], unitTypes: [], canvas: [], canvasCards: {}, researchQuestions: [],
-        hypotheses: [], swot: { S:"",W:"",O:"",T:"" }, decisions: [], datasets: [], charts: [], insights: [],
+        hypotheses: [], swot: { S:"",W:"",O:"",T:"" }, decisions: [], sources: [], report: {}, datasets: [], charts: [], insights: [],
         saleCondition: { depositRatio: 5, depositInstallment: true, midPaymentRatio: 60, midPaymentType: "free", remainderRatio: 35, balconyBasis: "tbd", balconyFee: 500, loanAvailable: true, transferRestriction: false, promoNote: "" },
         ...data,
       };
@@ -229,6 +234,48 @@
     })),
     deleteHypothesis: ({ projectId, hypId }) => setState((s) => ({
       projects: s.projects.map((p) => p.id !== projectId ? p : { ...p, hypotheses: p.hypotheses.filter((h) => h.id !== hypId), updatedAt: now() })
+    })),
+
+    // Sources
+    addSource: ({ projectId, title, url, type, trust }) => setState((s) => ({
+      projects: s.projects.map((p) => {
+        if (p.id !== projectId) return p;
+        const src = { id: uid(), title: title||'', url: url||'', type: type||'공공데이터', trust: trust||'B', createdAt: new Date().toISOString().slice(0,10) };
+        return { ...p, sources: [...(p.sources||[]), src], updatedAt: now() };
+      })
+    })),
+    updateSource: ({ projectId, sourceId, ...patch }) => setState((s) => ({
+      projects: s.projects.map((p) => p.id !== projectId ? p : { ...p, sources: (p.sources||[]).map((src) => src.id === sourceId ? { ...src, ...patch } : src), updatedAt: now() })
+    })),
+    deleteSource: ({ projectId, sourceId }) => setState((s) => ({
+      projects: s.projects.map((p) => p.id !== projectId ? p : { ...p, sources: (p.sources||[]).filter((src) => src.id !== sourceId), updatedAt: now() })
+    })),
+
+    // Report
+    setReportMemo: ({ projectId, secId, memo }) => setState((s) => ({
+      projects: s.projects.map((p) => {
+        if (p.id !== projectId) return p;
+        const r = { ...(p.report||{}) };
+        r[secId] = { ...(r[secId]||{}), memo };
+        return { ...p, report: r, updatedAt: now() };
+      })
+    })),
+    addReportBlock: ({ projectId, secId, block }) => setState((s) => ({
+      projects: s.projects.map((p) => {
+        if (p.id !== projectId) return p;
+        const r = { ...(p.report||{}) };
+        const sec = { ...(r[secId]||{}), blocks: [...((r[secId]||{}).blocks||[]), { id: uid(), ...block }] };
+        r[secId] = sec;
+        return { ...p, report: r, updatedAt: now() };
+      })
+    })),
+    delReportBlock: ({ projectId, secId, blockId }) => setState((s) => ({
+      projects: s.projects.map((p) => {
+        if (p.id !== projectId) return p;
+        const r = { ...(p.report||{}) };
+        r[secId] = { ...(r[secId]||{}), blocks: ((r[secId]||{}).blocks||[]).filter((b) => b.id !== blockId) };
+        return { ...p, report: r, updatedAt: now() };
+      })
     })),
   };
 

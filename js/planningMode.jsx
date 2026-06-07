@@ -551,9 +551,15 @@
             </div>
           ))}
         </div>
-        <button className="addrow" onClick={() => { const t = prompt('가설 입력:'); if (t) actions.addHypothesis({ projectId: proj.id, text: t }); }}>
-          <Icon name="plus" size={15} /> 가설 추가
-        </button>
+        <div style={{ display: 'flex', gap: 8, marginTop: 12, alignItems: 'center' }}>
+          <input className="pf-input" style={{ flex: 1 }} value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') { if (!input.trim()) return; actions.addHypothesis({ projectId: proj.id, text: input.trim() }); setInput(''); } }}
+            placeholder="+ 가설 추가 (Enter)" />
+          <button className="btn primary sm" onClick={() => { if (!input.trim()) return; actions.addHypothesis({ projectId: proj.id, text: input.trim() }); setInput(''); }}>
+            <Icon name="plus" size={12} /> 추가
+          </button>
+        </div>
       </PageDoc>
     );
   }
@@ -570,10 +576,11 @@
 
   function SwotPage({ proj }) {
     const swot = proj.swot || {};
+    const [inputs, setInputs] = React.useState({ S:'', W:'', O:'', T:'' });
 
     function getItems(k) { return (swot[k]||'') ? (swot[k]||'').split('\n').filter(Boolean) : []; }
     function save(k, arr) { actions.updateProject({ id: proj.id, swot: { ...swot, [k]: arr.join('\n') } }); }
-    function addItem(k)   { const t = prompt('항목 추가:'); if (t) save(k, [...getItems(k), t.trim()]); }
+    function addItem(k)   { const t = inputs[k].trim(); if (t) { save(k, [...getItems(k), t]); setInputs(p => ({...p,[k]:''})); } }
     function delItem(k,i) { save(k, getItems(k).filter((_,j) => j !== i)); }
 
     return (
@@ -601,10 +608,20 @@
                     </button>
                   </div>
                 ))}
-                <button className="sqadd" style={{ color: qd.tx, borderTopColor: borderCol }}
-                  onClick={() => addItem(qd.k)}>
-                  <Icon name="plus" size={13} /> 항목 추가
-                </button>
+                <div className="sqadd" style={{ borderTopColor: borderCol, display: 'flex', gap: 4, alignItems: 'center' }}>
+                  <input
+                    className="sqadd-input"
+                    value={inputs[qd.k]}
+                    onChange={e => setInputs(p => ({...p,[qd.k]:e.target.value}))}
+                    onKeyDown={e => e.key === 'Enter' && addItem(qd.k)}
+                    placeholder="항목 추가…"
+                    style={{ flex:1, background:'rgba(0,0,0,0.2)', border:'1px solid rgba(255,255,255,0.15)', borderRadius:5, padding:'3px 7px', fontSize:12, color:qd.tx, outline:'none', minWidth:0 }}
+                  />
+                  <button style={{ background:'rgba(0,0,0,0.18)', border:'none', borderRadius:5, width:24, height:24, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', flexShrink:0, color:qd.tx }}
+                    onClick={() => addItem(qd.k)}>
+                    <Icon name="plus" size={12} />
+                  </button>
+                </div>
               </div>
             );
           })}
@@ -729,6 +746,174 @@
     );
   }
 
+  /* ════════════════════════════════════════════════════════════
+     PAGE: Refs (출처·레퍼런스)
+  ══════════════════════════════════════════════════════════ */
+  const SRC_TYPES = ['정부기관','공공데이터','언론','기업','현장조사','내부자료'];
+  const SRC_TYPE_NEXT = {};
+  SRC_TYPES.forEach((t,i) => { SRC_TYPE_NEXT[t] = SRC_TYPES[(i+1) % SRC_TYPES.length]; });
+  const TRUST_NEXT  = { A:'B', B:'C', C:'A' };
+  const TRUST_COLOR = { A:'var(--pos)', B:'var(--warn)', C:'var(--tx-mid)' };
+
+  function RefsPage({ proj }) {
+    const sources = proj.sources || [];
+    const [form, setForm] = React.useState({ title:'', url:'', type:'공공데이터', trust:'B' });
+
+    function add() {
+      if (!form.title.trim()) return;
+      actions.addSource({ projectId: proj.id, ...form });
+      setForm({ title:'', url:'', type:'공공데이터', trust:'B' });
+    }
+    function del(id) { actions.deleteSource({ projectId: proj.id, sourceId: id }); }
+    function cycleType(id) {
+      const src = sources.find(s => s.id === id);
+      if (src) actions.updateSource({ projectId: proj.id, sourceId: id, type: SRC_TYPE_NEXT[src.type]||'공공데이터' });
+    }
+    function cycleTrust(id) {
+      const src = sources.find(s => s.id === id);
+      if (src) actions.updateSource({ projectId: proj.id, sourceId: id, trust: TRUST_NEXT[src.trust]||'B' });
+    }
+
+    return (
+      <PageDoc iconName="search" title="출처 · 레퍼런스" crumb={(proj.name||'') + ' / Planning Studio / 출처 · 레퍼런스'}>
+        <div className="plan-statline">
+          <span className="plan-stat"><b>{sources.length}</b> 출처</span>
+          <span style={{ flex:1 }} />
+          <span style={{ fontSize:11, color:'var(--tx-faint)' }}>유형·신뢰도 배지 클릭으로 변경 · A=높음 / B=보통 / C=낮음</span>
+        </div>
+        <div className="declist">
+          {sources.map(src => (
+            <div key={src.id} className="decard">
+              <div className="dechead">
+                <span className="decdate">{src.createdAt}</span>
+                <span className="htag" style={{ cursor:'pointer' }} onClick={() => cycleType(src.id)}>{src.type}</span>
+                <span className="htag" style={{ cursor:'pointer', color: TRUST_COLOR[src.trust]||'var(--tx-mid)' }} onClick={() => cycleTrust(src.id)}>신뢰 {src.trust}</span>
+                <span style={{ flex:1 }} />
+                <button className="icon-btn-sm" style={{ opacity:1 }} onClick={() => del(src.id)}><Icon name="x" size={11} /></button>
+              </div>
+              <div className="decwhat">{src.title}</div>
+              {src.url && <div className="decwhy" style={{ wordBreak:'break-all' }}><span className="decwl">URL</span>{src.url}</div>}
+            </div>
+          ))}
+          {sources.length === 0 && <div className="plan-empty">출처를 추가해 근거를 관리하세요.</div>}
+        </div>
+        <div className="dec-add">
+          <input className="pf-input" value={form.title}
+            onChange={e => setForm({...form, title:e.target.value})} placeholder="출처명 (예: 국토부 주택통계 2025)" />
+          <div style={{ display:'flex', gap:8 }}>
+            <input className="pf-input" style={{ flex:1 }} value={form.url}
+              onChange={e => setForm({...form, url:e.target.value})} placeholder="URL (선택)" />
+            <select className="pf-select" style={{ width:90 }} value={form.type} onChange={e => setForm({...form, type:e.target.value})}>
+              {SRC_TYPES.map(t => <option key={t}>{t}</option>)}
+            </select>
+            <select className="pf-select" style={{ width:60 }} value={form.trust} onChange={e => setForm({...form, trust:e.target.value})}>
+              {['A','B','C'].map(t => <option key={t}>신뢰 {t}</option>)}
+            </select>
+            <button className="btn primary sm" onClick={add}><Icon name="plus" size={12} /> 추가</button>
+          </div>
+        </div>
+      </PageDoc>
+    );
+  }
+
+  /* ════════════════════════════════════════════════════════════
+     PAGE: Report Builder
+  ══════════════════════════════════════════════════════════ */
+  const REPORT_SECS = [
+    { id:'overview',    title:'시장 개요',     icon:'analysis' },
+    { id:'price',       title:'가격 분석',     icon:'dollar' },
+    { id:'competition', title:'경쟁 단지',     icon:'layers' },
+    { id:'location',    title:'입지 분석',     icon:'map' },
+    { id:'demand',      title:'수요·인구',     icon:'users' },
+    { id:'terms',       title:'분양 조건',     icon:'doc' },
+    { id:'marketing',   title:'마케팅 포인트', icon:'bulb' },
+    { id:'strategy',    title:'종합 전략',     icon:'target' },
+  ];
+
+  function ReportPage({ proj }) {
+    const insights = proj.insights || [];
+    const report   = proj.report   || {};
+    const memoCount = REPORT_SECS.filter(s => report[s.id]?.memo?.trim()).length;
+    const [open, setOpen] = React.useState({});
+
+    function toggleSec(id) { setOpen(p => ({...p, [id]: !p[id]})); }
+    function setMemo(secId, memo) { actions.setReportMemo({ projectId: proj.id, secId, memo }); }
+    function addInsightBlock(secId, ins) {
+      const sec = report[secId] || {};
+      const already = (sec.blocks||[]).some(b => b.insightId === ins.id);
+      if (already) return;
+      actions.addReportBlock({ projectId: proj.id, secId, block: { insightId: ins.id, title: ins.title||ins.text||'' } });
+    }
+    function delBlock(secId, blockId) { actions.delReportBlock({ projectId: proj.id, secId, blockId }); }
+
+    return (
+      <PageDoc iconName="report" title="Report Builder" crumb={(proj.name||'') + ' / Planning Studio / Report Builder'}>
+        <div className="plan-statline">
+          <span className="plan-stat"><b>{memoCount}/8</b> 섹션 작성</span>
+          <span style={{ flex:1 }} />
+          <span style={{ fontSize:11, color:'var(--tx-faint)' }}>각 섹션에 해석 메모 + 인사이트 블록 삽입</span>
+        </div>
+        <div className="plan-callout">
+          <span className="ci"><Icon name="bolt" size={16} /></span>
+          <div>섹션 제목을 클릭해 펼치고, 해석 메모를 작성하거나 인사이트를 삽입하세요.</div>
+        </div>
+        {REPORT_SECS.map((sec, idx) => {
+          const secData = report[sec.id] || {};
+          const blocks = secData.blocks || [];
+          const memo   = secData.memo   || '';
+          const isOpen = open[sec.id];
+          const usedIds = new Set(blocks.map(b => b.insightId));
+          const availIns = insights.filter(i => !usedIds.has(i.id));
+          const hasMemo = memo.trim().length > 0;
+
+          return (
+            <div key={sec.id} style={{ marginBottom:8, background:'var(--bg-2)', borderRadius:10, border:'1px solid var(--line)', overflow:'hidden' }}>
+              <div style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 14px', cursor:'pointer' }}
+                onClick={() => toggleSec(sec.id)}>
+                <Icon name={sec.icon} size={14} style={{ color:'var(--accent-hi)', flexShrink:0 }} />
+                <span style={{ fontWeight:600, fontSize:13, color:'var(--tx-hi)', flex:1 }}>
+                  {idx+1}. {sec.title}
+                </span>
+                {hasMemo && <span className="chip" style={{ background:'var(--accent-soft)', color:'var(--accent-hi)', border:'1px solid var(--accent-line)' }}>작성됨</span>}
+                {blocks.length > 0 && <span className="chip">인사이트 {blocks.length}</span>}
+                {!hasMemo && blocks.length === 0 && <span className="chip" style={{ color:'var(--tx-faint)' }}>빈 섹션</span>}
+                <Icon name={isOpen ? 'chevD' : 'chevR'} size={14} style={{ color:'var(--tx-faint)' }} />
+              </div>
+              {isOpen && (
+                <div style={{ padding:'0 14px 14px', display:'flex', flexDirection:'column', gap:10 }}>
+                  <textarea className="pf-textarea" style={{ minHeight:72 }}
+                    value={memo} onChange={e => setMemo(sec.id, e.target.value)}
+                    placeholder="이 섹션의 해석 메모를 입력하세요…" />
+                  {blocks.map(b => (
+                    <div key={b.id} style={{ display:'flex', alignItems:'center', gap:8, background:'var(--bg-3)', borderRadius:7, padding:'7px 10px' }}>
+                      <Icon name="bulb" size={13} style={{ color:'var(--accent-hi)', flexShrink:0 }} />
+                      <span style={{ flex:1, fontSize:13, color:'var(--tx-hi)' }}>{b.title}</span>
+                      <button className="icon-btn-sm" onClick={() => delBlock(sec.id, b.id)}><Icon name="x" size={11} /></button>
+                    </div>
+                  ))}
+                  {availIns.length > 0 && (
+                    <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
+                      <span style={{ fontSize:11, color:'var(--tx-faint)', alignSelf:'center', flexShrink:0 }}>인사이트 삽입:</span>
+                      {availIns.slice(0,5).map(ins => (
+                        <button key={ins.id} className="chip" style={{ cursor:'pointer', fontSize:11 }}
+                          onClick={() => addInsightBlock(sec.id, ins)}>
+                          + {(ins.title||ins.text||'').slice(0,20)}{(ins.title||ins.text||'').length>20?'…':''}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {insights.length === 0 && (
+                    <div className="plan-empty">인사이트 저장소에서 인사이트를 추가하면 여기서 삽입할 수 있습니다.</div>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </PageDoc>
+    );
+  }
+
   /* ── Stubs ───────────────────────────────────────────────── */
   function StubPage({ iconName, title, desc, proj }) {
     return (
@@ -749,8 +934,8 @@
     insight:   (p)         => <InsightPage   proj={p} />,
     decision:  (p)         => <DecisionPage  proj={p} />,
     mindmap:   (p)         => <StubPage iconName="node"   title="Mind Map"         desc="Phase 3에서 구현 예정" proj={p} />,
-    refs:      (p)         => <StubPage iconName="search" title="출처 · 레퍼런스"  desc="출처 관리 기능 추가 예정" proj={p} />,
-    report:    (p)         => <StubPage iconName="report" title="Report Builder"   desc="Phase 3에서 구현 예정" proj={p} />,
+    refs:      (p)         => <RefsPage   proj={p} />,
+    report:    (p, onPage) => <ReportPage proj={p} onPage={onPage} />,
   };
 
   /* ── Planning Studio root ────────────────────────────────── */

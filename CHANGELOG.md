@@ -4,6 +4,28 @@
 
 ---
 
+## [0.5.0] — 2026-06-07 · handoff3 반영 — 출처·레퍼런스, Report Builder, SWOT/가설 인라인 편집
+
+### Added — `js/planningMode.jsx`
+- **RefsPage (출처·레퍼런스)**: 출처 목록 + 유형·신뢰도 배지 클릭 순환 + 추가/삭제 폼
+- **ReportPage (Report Builder)**: 8섹션 아코디언 — 해석 메모 + 인사이트 블록 삽입/삭제, 작성 진행률 표시
+
+### Changed — `js/planningMode.jsx`
+- `SwotPage`: `prompt()` → 사분면별 인라인 input 필드 + `+` 버튼으로 교체
+- `HypPage`: `prompt()` → 하단 인라인 input + 추가 버튼으로 교체
+- PAGES 라우터: `refs`/`report` Stub → 실제 컴포넌트로 교체
+
+### Changed — `js/store.jsx`
+- `SAMPLE_PROJECT`: `sources[]` 샘플 2건, `report: {}` 필드 추가
+- `createProject`: `sources: []`, `report: {}` 초기값 추가
+- 액션 추가: `addSource`, `updateSource`, `deleteSource`
+- 액션 추가: `setReportMemo`, `addReportBlock`, `delReportBlock`
+
+### Changed — `index.html`
+- `store.jsx?v=3`, `planningMode.jsx?v=3` 버전 쿼리 갱신
+
+---
+
 ## [0.4.0] — 2026-06-07 · 뷰 전환 구현 (Cockpit · Board) & 인사이트 모델 개선
 
 ### Added — `js/cockpitView.jsx` (신규)
