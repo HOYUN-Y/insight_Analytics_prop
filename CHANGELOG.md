@@ -4,6 +4,50 @@
 
 ---
 
+## [0.4.0] — 2026-06-07 · 뷰 전환 구현 (Cockpit · Board) & 인사이트 모델 개선
+
+### Added — `js/cockpitView.jsx` (신규)
+- **대시보드 뷰 (Cockpit)** 전용 컴포넌트 신규 구현
+- 3패널 레이아웃: 좌 nav tree / 중앙 / 우 패널
+  - 좌 nav: PLANNING STUDIO 헤더 + 프로젝트 배지 + 페이지 링크 (클릭 시 docs 뷰로 이동)
+  - 중앙: 프로젝트 제목·주소 + 6-field 메타 그리드 + 파이프라인 바 + 6-KPI 행 + 연구질문·가설 2열
+  - 우 패널: 최근 인사이트 5건 + 의사결정 로그 4건
+  - 상태 칩 클릭으로 연구질문/가설 상태 순환 (Cockpit 내에서 직접 편집)
+
+### Added — `js/boardView.jsx` (신규)
+- **보드 뷰 (Canvas)** 전용 컴포넌트 신규 구현
+- 도트 격자 배경 캔버스 (`radial-gradient` 24×24)
+- SVG Mind Map: 루트 노드 + 7축 leaf 노드 + dashed 연결선
+- SWOT 2×2 위젯: 스토어 데이터 실시간 반영
+- 인사이트·의사결정 스티키 노트 카드 (색상 구분)
+
+### Changed — `js/app.jsx`
+- `planView` 상태에 따라 뷰 라우팅 추가
+  - `"docs"` → `<window.PlanningMode />`
+  - `"dashboard"` → `<window.CockpitView />`
+  - `"board"` → `<window.BoardView />`
+
+### Changed — `js/store.jsx`
+- `SAMPLE_PROJECT.insights` — 샘플 인사이트 3건 추가 (`title` + `body` + `tag` + `star` 구조)
+- `SAMPLE_PROJECT.decisions` — 샘플 의사결정 1건 추가
+
+### Changed — `js/planningMode.jsx`
+- `InsightPanel` (우측 패널): `text` 단일 필드 → `title`(bold) + `body`(faint) 2행 표시로 변경
+- `InsightPanel` 빠른 추가: `prompt()` → 인라인 input 필드로 교체
+- `InsightPage` (저장소 페이지): 인사이트 입력 폼에 `title` 필드 추가, `body` textarea 분리
+- 기존 `text` 단일 필드 데이터 하위 호환 처리 (`ins.title || ins.text`)
+
+### Changed — `css/planning.css`
+- `.ins-quick` 스타일 추가 (우측 패널 빠른 추가 인풋)
+- Cockpit 뷰 전용 CSS: `.ck-root`, `.ck-nav`, `.ck-center`, `.ck-right`, `.ck-kpis`, `.ck-2col`, `.ck-mf`, `.ck-ins-card` 등
+- Board 뷰 전용 CSS: `.bv-root`, `.bv-canvas`, `.bv-widget`, `.bv-mindmap-svg`, `.bv-swot-grid`, `.bv-stickies`, `.bv-sticky` 등
+
+### Changed — `index.html`
+- `cockpitView.jsx`, `boardView.jsx` 스크립트 태그 추가 (planningMode 뒤, projectMode 앞)
+- 수정된 파일 버전 쿼리 v1 → v2 (`store`, `planningMode`, `app`)
+
+---
+
 ## [0.3.0] — 2026-06-07 · 디자인 스펙 정합 & 아이콘 시스템 교정
 
 ### Changed — `js/icons.jsx`

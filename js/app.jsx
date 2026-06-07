@@ -36,8 +36,13 @@
 
     let content;
 
-    if (mode === "planning" && window.PlanningMode) {
-      content = <window.PlanningMode />;
+    const planView = useStore(s => s.planView || "docs");
+
+    if (mode === "planning") {
+      if (planView === "dashboard" && window.CockpitView) content = <window.CockpitView />;
+      else if (planView === "board" && window.BoardView) content = <window.BoardView />;
+      else if (window.PlanningMode) content = <window.PlanningMode />;
+      else content = null;
     } else if (mode === "project" && window.ProjectMode) {
       content = (
         <window.Workspace

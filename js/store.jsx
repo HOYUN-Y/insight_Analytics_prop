@@ -50,7 +50,15 @@
     ],
     swot: { S: "", W: "", O: "", T: "" },
     canvasCards: {},
-    decisions: [], datasets: [], charts: [], insights: [],
+    decisions: [
+      { id: 'dec_1', title: '84타입 단일 평형 전략 유지', rationale: '면적 다양화 시 분양가 책정 복잡도 증가 및 공사비 상승 우려. 소형 분산보다 84 집중이 시장 흡수력 높음.', tag: '전략', createdAt: '2026-05-20', status: 'active' },
+    ],
+    datasets: [], charts: [],
+    insights: [
+      { id: 'ins_1', title: '성성 생활권 호수공원 조망 프리미엄 확인', body: '호수공원 직접 조망 세대는 비조망 동 대비 약 15~20% 높은 실거래가 형성. 고층 판상형 배치 최대화 필요.', tag: '입지', star: 5, createdAt: '2026-05-15' },
+      { id: 'ins_2', title: '1군 브랜드 확보 여부가 청약 경쟁률의 핵심 변수', body: '인근 경쟁 단지 청약 경쟁률 분석 결과, 브랜드 티어가 분양가·입지보다 초기 청약 결과에 더 큰 영향을 미침.', tag: '브랜드', star: 4, createdAt: '2026-05-18' },
+      { id: 'ins_3', title: '임대 소송 이슈 — 선제적 리스크 커뮤니케이션 필요', body: '2024년 7월 임차인 모집 실패 및 환불 소송이 온라인 커뮤니티에 확산. 분양 마케팅 초기 단계에서 해소 메시지 준비 필수.', tag: '리스크', star: 3, createdAt: '2026-05-22' },
+    ],
     risks: "'24년 7월 장기일반민간임대 임차인 모집 실패로 인한 탈퇴·환불 소송 이슈 발생",
     createdAt: now(), updatedAt: now(),
   };

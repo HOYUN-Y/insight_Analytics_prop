@@ -59,10 +59,11 @@
   /* ── Right insights panel ────────────────────────────────── */
   function InsightPanel({ proj, onPage }) {
     const insights = (proj && proj.insights) || [];
-    function add() {
-      const text = prompt('인사이트를 입력하세요:');
-      if (!text) return;
-      actions.updateProject({ id: proj.id, insights: [...insights, { id: 'ins_' + Date.now(), text, tag: '', star: 3, createdAt: new Date().toISOString().slice(0,10) }] });
+    const [quick, setQuick] = React.useState('');
+    function addQuick() {
+      if (!quick.trim()) return;
+      actions.updateProject({ id: proj.id, insights: [...insights, { id: 'ins_' + Date.now(), title: quick, body: '', tag: '', star: 3, createdAt: new Date().toISOString().slice(0,10) }] });
+      setQuick('');
     }
     return (
       <div className="plan-right">
@@ -73,7 +74,8 @@
         <div className="insp">
           {insights.slice(-3).reverse().map(ins => (
             <div key={ins.id} className="icard" onClick={() => onPage('insight')}>
-              <div className="it">{ins.text.slice(0,55)}{ins.text.length > 55 ? '…' : ''}</div>
+              <div className="it">{ins.title || ins.text || ''}</div>
+              {(ins.body || ins.text) && <div className="ib">{(ins.body || ins.text).slice(0,60)}{(ins.body||ins.text).length > 60 ? '…' : ''}</div>}
               <div className="if">
                 {ins.tag && <span className="htag">#{ins.tag}</span>}
                 <span style={{ flex: 1 }} />
@@ -84,9 +86,11 @@
             </div>
           ))}
           {insights.length === 0 && <div className="plan-empty">아직 인사이트가 없습니다.</div>}
-          <button className="addrow" style={{ marginTop: 2 }} onClick={add}>
-            <Icon name="plus" size={14} /> 인사이트 추가
-          </button>
+          <div className="ins-quick">
+            <input className="pf-input" value={quick} onChange={e => setQuick(e.target.value)}
+              placeholder="인사이트 빠른 추가…" onKeyDown={e => e.key === 'Enter' && addQuick()} />
+            <button className="icon-btn-sm" onClick={addQuick} style={{ flexShrink: 0 }}><Icon name="plus" size={13} /></button>
+          </div>
         </div>
       </div>
     );
@@ -614,13 +618,14 @@
   ══════════════════════════════════════════════════════════ */
   function InsightPage({ proj }) {
     const insights = proj.insights || [];
-    const [text, setText] = React.useState('');
-    const [tag,  setTag]  = React.useState('');
+    const [title, setTitle] = React.useState('');
+    const [body,  setBody]  = React.useState('');
+    const [tag,   setTag]   = React.useState('');
 
     function add() {
-      if (!text.trim()) return;
-      actions.updateProject({ id: proj.id, insights: [...insights, { id: 'ins_'+Date.now(), text, tag, star: 3, createdAt: new Date().toISOString().slice(0,10) }] });
-      setText(''); setTag('');
+      if (!title.trim()) return;
+      actions.updateProject({ id: proj.id, insights: [...insights, { id: 'ins_'+Date.now(), title, body, tag, star: 3, createdAt: new Date().toISOString().slice(0,10) }] });
+      setTitle(''); setBody(''); setTag('');
     }
     function del(id) { actions.updateProject({ id: proj.id, insights: insights.filter(i => i.id !== id) }); }
     function setStar(id, star) { actions.updateProject({ id: proj.id, insights: insights.map(i => i.id === id ? {...i,star} : i) }); }
@@ -633,11 +638,12 @@
           <span style={{ fontSize: 11, color: 'var(--tx-faint)' }}>★ 클릭으로 중요도 조정 · Report Builder에서 재사용</span>
         </div>
         {/* add form */}
-        <div className="ins-add-form" style={{ marginBottom: 16 }}>
-          <textarea className="pf-textarea" style={{ flex: 1, minHeight: 60 }} value={text}
-            onChange={e => setText(e.target.value)} placeholder="인사이트를 기록하세요" />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 100 }}>
-            <input className="pf-input" value={tag} onChange={e => setTag(e.target.value)} placeholder="#태그" />
+        <div className="ins-add-form" style={{ marginBottom: 16, display: 'flex', flexDirection: 'column', gap: 8, background: 'var(--bg-2)', borderRadius: 10, padding: '14px 16px', border: '1px solid var(--line)' }}>
+          <input className="pf-input" value={title} onChange={e => setTitle(e.target.value)} placeholder="제목 — 핵심 발견을 한 줄로" />
+          <textarea className="pf-textarea" style={{ minHeight: 56 }} value={body}
+            onChange={e => setBody(e.target.value)} placeholder="상세 내용 (선택)" />
+          <div style={{ display: 'flex', gap: 8 }}>
+            <input className="pf-input" style={{ flex: 1 }} value={tag} onChange={e => setTag(e.target.value)} placeholder="#태그" />
             <button className="btn primary sm" onClick={add}><Icon name="plus" size={12} /> 저장</button>
           </div>
         </div>
@@ -645,15 +651,18 @@
           {[...insights].reverse().map(ins => (
             <div key={ins.id} className="insrow">
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div className="it">{ins.text}</div>
-                <div style={{ marginTop: 7 }}>
+                <div className="it">{ins.title || ins.text || ''}</div>
+                {(ins.body || (!ins.title && ins.text)) && (
+                  <div className="ib" style={{ marginTop: 5 }}>{ins.body || ins.text}</div>
+                )}
+                <div style={{ marginTop: 7, display: 'flex', alignItems: 'center', gap: 8 }}>
                   {ins.tag && <span className="htag">#{ins.tag}</span>}
-                  {ins.createdAt && <span style={{ fontSize: 10, color: 'var(--tx-faint)', marginLeft: 10, fontFamily: 'var(--font-mono)' }}>{ins.createdAt}</span>}
+                  {ins.createdAt && <span style={{ fontSize: 10, color: 'var(--tx-faint)', fontFamily: 'var(--font-mono)' }}>{ins.createdAt}</span>}
                 </div>
               </div>
               <div className="starset">
                 {[1,2,3,4,5].map(n => (
-                  <span key={n} style={{ color: n <= (ins.star||3) ? 'var(--accent-hi)' : 'var(--tx-faint)' }}
+                  <span key={n} style={{ color: n <= (ins.star||3) ? 'var(--accent-hi)' : 'var(--tx-faint)', cursor: 'pointer' }}
                     onClick={() => setStar(ins.id, n)}>★</span>
                 ))}
               </div>
