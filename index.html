@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>insight Analytics Prop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="css/tokens.css" />
+<link rel="stylesheet" href="css/app.css" />
+<link rel="stylesheet" href="css/grid.css" />
+<link rel="stylesheet" href="css/data.css" />
+<link rel="stylesheet" href="css/clean.css" />
+<link rel="stylesheet" href="css/viz.css" />
+<link rel="stylesheet" href="css/dash.css" />
+<link rel="stylesheet" href="css/map.css" />
+<link rel="stylesheet" href="css/tweaks.css" />
+<link rel="stylesheet" href="css/ai.css" />
+<link rel="stylesheet" href="css/planning.css" />
+
+<style>
+/* ── Loading screen ─────────────────────────────── */
+#prop-loader {
+  position: fixed; inset: 0; z-index: 99999;
+  background: #0e0e0e;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  font-family: "IBM Plex Sans", "IBM Plex Sans KR", system-ui, sans-serif;
+  transition: opacity 0.55s cubic-bezier(0.4,0,0.2,1);
+  user-select: none;
+}
+#prop-loader.hiding { opacity: 0; pointer-events: none; }
+
+.pl-ring { position: relative; width: 88px; height: 88px; margin-bottom: 28px; }
+.pl-ring svg { position: absolute; inset: 0; }
+.pl-ring-track { stroke: rgba(255,255,255,0.07); fill: none; }
+.pl-ring-fill {
+  stroke: #e76709; fill: none; stroke-linecap: round;
+  stroke-dasharray: 226; stroke-dashoffset: 226;
+  transform-origin: center; transform: rotate(-90deg);
+  transition: stroke-dashoffset 0.4s cubic-bezier(0.4,0,0.2,1);
+}
+.pl-center {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.pl-logo-mark {
+  font-size: 26px; font-weight: 700; letter-spacing: -1px; color: #87ce5b;
+  animation: pl-pulse 2s ease-in-out infinite;
+}
+@keyframes pl-pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+.pl-brand { text-align: center; margin-bottom: 32px; }
+.pl-name {
+  font-size: 20px; font-weight: 700; letter-spacing: -.3px; color: #fff; margin-bottom: 4px;
+}
+.pl-name .sight  { color: #e76709; }
+.pl-name .prop   { color: #87ce5b; font-size: 13px; font-weight: 700; margin-left: 4px; }
+.pl-name .ana    { font-size: 13px; font-weight: 400; color: rgba(255,255,255,.4); }
+.pl-sub {
+  font-size: 11px; font-weight: 500; letter-spacing: .18em;
+  text-transform: uppercase; color: rgba(255,255,255,.3);
+}
+
+.pl-checks { display: flex; flex-direction: column; gap: 10px; min-width: 220px; margin-bottom: 28px; }
+.pl-check {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 12px; color: rgba(255,255,255,.3); transition: color 0.3s;
+}
+.pl-check.done   { color: rgba(255,255,255,.75); }
+.pl-check.failed { color: #e05c5c; }
+.pl-dot {
+  width: 16px; height: 16px; flex-shrink: 0; border-radius: 50%;
+  border: 1.5px solid rgba(255,255,255,.15);
+  display: flex; align-items: center; justify-content: center;
+  transition: all .3s; position: relative;
+}
+.pl-dot::after {
+  content: ""; position: absolute; inset: -2px; border-radius: 50%;
+  border: 1.5px solid transparent; border-top-color: #e76709;
+  animation: pl-spin .8s linear infinite; opacity: 0; transition: opacity .2s;
+}
+@keyframes pl-spin { to { transform: rotate(360deg); } }
+.pl-check.waiting .pl-dot::after { opacity: 1; }
+.pl-check.done .pl-dot { background: #e76709; border-color: #e76709; }
+.pl-check.done .pl-dot::after { display: none; }
+.pl-dot-chk { display: none; }
+.pl-check.done .pl-dot-chk { display: block; }
+
+.pl-bar-wrap {
+  width: 200px; height: 3px; background: rgba(255,255,255,.07);
+  border-radius: 2px; overflow: hidden; margin-bottom: 10px;
+}
+.pl-bar-fill {
+  height: 100%; width: 0; background: #e76709; border-radius: 2px;
+  transition: width .4s cubic-bezier(.4,0,.2,1);
+}
+.pl-status { font-size: 11px; color: rgba(255,255,255,.3); }
+.pl-version {
+  position: absolute; bottom: 24px;
+  font-size: 10px; color: rgba(255,255,255,.1);
+  letter-spacing: .08em; font-family: "IBM Plex Mono", monospace;
+}
+</style>
+</head>
+<body>
+
+<!-- Loading Screen -->
+<div id="prop-loader">
+  <div class="pl-ring">
+    <svg viewBox="0 0 88 88" width="88" height="88">
+      <circle class="pl-ring-track" cx="44" cy="44" r="36" stroke-width="3"/>
+      <circle class="pl-ring-fill"  id="pl-ring-fill" cx="44" cy="44" r="36" stroke-width="3"/>
+    </svg>
+    <div class="pl-center">
+      <span class="pl-logo-mark">P</span>
+    </div>
+  </div>
+
+  <div class="pl-brand">
+    <div class="pl-name">in<span class="sight">sight</span><span class="ana"> Analytics</span><span class="prop">Prop</span></div>
+    <div class="pl-sub">Real Estate Planning Studio</div>
+  </div>
+
+  <div class="pl-checks">
+    <div class="pl-check waiting" id="plc-react">
+      <span class="pl-dot">
+        <svg class="pl-dot-chk" width="9" height="9" viewBox="0 0 10 10" fill="none">
+          <path d="M1.5 5l2.5 2.5 4.5-5" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </span>
+      React 18 + Babel
+    </div>
+    <div class="pl-check waiting" id="plc-echarts">
+      <span class="pl-dot">
+        <svg class="pl-dot-chk" width="9" height="9" viewBox="0 0 10 10" fill="none">
+          <path d="M1.5 5l2.5 2.5 4.5-5" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </span>
+      ECharts 5
+    </div>
+    <div class="pl-check waiting" id="plc-data">
+      <span class="pl-dot">
+        <svg class="pl-dot-chk" width="9" height="9" viewBox="0 0 10 10" fill="none">
+          <path d="M1.5 5l2.5 2.5 4.5-5" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </span>
+      데이터 엔진 초기화
+    </div>
+    <div class="pl-check waiting" id="plc-app">
+      <span class="pl-dot">
+        <svg class="pl-dot-chk" width="9" height="9" viewBox="0 0 10 10" fill="none">
+          <path d="M1.5 5l2.5 2.5 4.5-5" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </span>
+      앱 렌더링 완료
+    </div>
+  </div>
+
+  <div class="pl-bar-wrap"><div class="pl-bar-fill" id="pl-bar-fill"></div></div>
+  <div class="pl-status" id="pl-status">의존성 확인 중…</div>
+  <div class="pl-version">v0.1 · insight Analytics Prop</div>
+</div>
+
+<!-- App root -->
+<div id="root"></div>
+
+<!-- Loading controller -->
+<script>
+(function () {
+  var STEPS = [
+    { id: "plc-react",   check: function() { return !!(window.React && window.ReactDOM && window.Babel); }, label: "React + Babel 로드 완료" },
+    { id: "plc-echarts", check: function() { return !!window.echarts; },                                    label: "ECharts 로드 완료" },
+    { id: "plc-data",    check: function() { return !!(window.NODE && window.NODE.datasets && window.Store); }, label: "데이터 엔진 준비됨" },
+    { id: "plc-app",     check: function() { var r = document.getElementById("root"); return !!(r && r.children.length > 0); }, label: "앱 시작됨" },
+  ];
+  var TOTAL = STEPS.length, completed = 0, timers = [];
+  function pct() { return Math.round((completed / TOTAL) * 100); }
+  function setRing(p) {
+    var c = document.getElementById("pl-ring-fill");
+    if (c) c.style.strokeDashoffset = 226 - (p / 100) * 226;
+  }
+  function setBar(p) {
+    var b = document.getElementById("pl-bar-fill"); if (b) b.style.width = p + "%"; setRing(p);
+  }
+  function setStatus(m) { var e = document.getElementById("pl-status"); if (e) e.textContent = m; }
+  function markDone(id, label) {
+    var el = document.getElementById(id); if (!el) return;
+    el.classList.remove("waiting"); el.classList.add("done");
+    completed++; setBar(pct()); setStatus(label);
+    if (completed >= TOTAL) setTimeout(dismiss, 380);
+  }
+  function markFailed(id, msg) {
+    var el = document.getElementById(id); if (!el) return;
+    el.classList.remove("waiting"); el.classList.add("failed");
+    setStatus("⚠ " + msg);
+    completed++; setBar(pct()); if (completed >= TOTAL) setTimeout(dismiss, 600);
+  }
+  function pollStep(step, index, attempt) {
+    attempt = attempt || 0;
+    var MAX = index < 2 ? 8000 : 12000, INT = 60;
+    if (step.check()) { markDone(step.id, step.label); return; }
+    if (attempt * INT > MAX) { markFailed(step.id, step.id + " 로드 실패"); return; }
+    var t = setTimeout(function() { pollStep(step, index, attempt + 1); }, INT);
+    timers.push(t);
+  }
+  function dismiss() {
+    timers.forEach(function(t) { clearTimeout(t); });
+    var l = document.getElementById("prop-loader"); if (!l) return;
+    l.classList.add("hiding");
+    setTimeout(function() { if (l.parentNode) l.parentNode.removeChild(l); }, 580);
+  }
+  STEPS.forEach(function(s, i) { setTimeout(function() { pollStep(s, i); }, i * 120); });
+  setTimeout(function() { var l = document.getElementById("prop-loader"); if (l && !l.classList.contains("hiding")) dismiss(); }, 15000);
+})();
+</script>
+
+<!-- CDN dependencies -->
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
+
+<!-- App scripts -->
+<script src="js/logger.js?v=1"></script>
+<script src="js/data.js?v=1"></script>
+<script src="js/statsMath.js?v=1"></script>
+<script src="js/insightEngine.js?v=1"></script>
+<script type="text/babel" src="js/icons.jsx?v=1"></script>
+<script type="text/babel" src="js/store.jsx?v=1"></script>
+<script type="text/babel" src="js/charts.jsx?v=1"></script>
+<script type="text/babel" src="js/grid.jsx?v=1"></script>
+<script type="text/babel" src="js/shell.jsx?v=1"></script>
+<script type="text/babel" src="js/dataMode.jsx?v=1"></script>
+<script type="text/babel" src="js/cleanMode.jsx?v=1"></script>
+<script type="text/babel" src="js/vizMode.jsx?v=1"></script>
+<script type="text/babel" src="js/mapMode.jsx?v=1"></script>
+<script type="text/babel" src="js/dashMode.jsx?v=1"></script>
+<script type="text/babel" src="js/planningMode.jsx?v=1"></script>
+<script type="text/babel" src="js/projectMode.jsx?v=1"></script>
+<script type="text/babel" src="js/tweaks.jsx?v=1"></script>
+<script type="text/babel" src="js/aiDrawer.jsx?v=1"></script>
+<script type="text/babel" src="js/app.jsx?v=1"></script>
+</body>
+</html>
