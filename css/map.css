@@ -13,3 +13,83 @@
 .mr-bar { flex: 1; height: 9px; background: var(--bg-2); border-radius: 2px; overflow: hidden; }
 .mr-bar span { display: block; height: 100%; background: var(--accent); opacity: 0.8; border-radius: 2px; }
 .mr-val { flex: 0 0 auto; font-size: var(--fs-11); color: var(--tx-mid); }
+
+/* ── Map Studio (PoC / M0) ───────────────────────────── */
+.ms-root { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+.ms-toolbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px; border-bottom: 1px solid var(--bg-2); flex: 0 0 auto;
+}
+.ms-tb-title { display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--tx-hi); font-size: var(--fs-13); }
+.ms-tb-badge {
+  font-family: "IBM Plex Mono", monospace; font-size: var(--fs-10);
+  color: var(--accent); background: var(--accent-soft);
+  padding: 1px 6px; border-radius: 4px; letter-spacing: .04em;
+}
+.ms-tb-actions { display: flex; align-items: center; gap: 6px; }
+.ms-radbtn {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: var(--fs-11); color: var(--tx-mid);
+  background: var(--bg-1); border: 1px solid var(--bg-2);
+  padding: 4px 9px; border-radius: 6px; cursor: pointer; transition: all .15s;
+}
+.ms-radbtn:hover { background: var(--bg-2); }
+.ms-radbtn.on { color: var(--tx-hi); border-color: var(--rc); }
+.ms-radbtn-swatch { width: 9px; height: 9px; border-radius: 50%; background: var(--rc); opacity: .35; }
+.ms-radbtn.on .ms-radbtn-swatch { opacity: 1; }
+.ms-tb-btn {
+  font-size: var(--fs-11); color: var(--tx-mid); background: var(--bg-1);
+  border: 1px solid var(--bg-2); padding: 4px 10px; border-radius: 6px; cursor: pointer;
+}
+.ms-tb-btn:hover { background: var(--bg-2); color: var(--tx-hi); }
+
+.ms-canvas-wrap { position: relative; flex: 1 1 auto; min-height: 0; }
+.ms-canvas-wrap .ms-canvas { position: absolute; inset: 0 !important; width: 100% !important; height: 100% !important; }
+.ms-overlay {
+  position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+  background: var(--bg-1); color: var(--tx-mid); font-size: var(--fs-12);
+  padding: 6px 14px; border-radius: 8px; border: 1px solid var(--bg-2); z-index: 5;
+}
+.ms-overlay.ms-err { color: var(--neg); border-color: var(--neg); }
+.ms-footnote {
+  flex: 0 0 auto; padding: 7px 14px; font-size: var(--fs-10);
+  color: var(--tx-faint); border-top: 1px solid var(--bg-2);
+  font-family: "IBM Plex Mono", monospace;
+}
+
+/* 단지 핀 */
+.ms-pin { position: relative; width: 16px; height: 16px; }
+.ms-pin-dot {
+  position: absolute; inset: 3px; border-radius: 50%;
+  background: var(--orange); border: 2px solid #fff;
+  box-shadow: 0 0 0 1px rgba(0,0,0,.4); z-index: 2;
+}
+.ms-pin-pulse {
+  position: absolute; inset: 0; border-radius: 50%;
+  background: var(--orange); opacity: .4; animation: ms-pulse 1.8s ease-out infinite;
+}
+@keyframes ms-pulse { 0% { transform: scale(.6); opacity: .5; } 100% { transform: scale(2.4); opacity: 0; } }
+
+/* MapLibre 다크 톤 보정 */
+.ms-canvas .maplibregl-popup-content { background: var(--bg-1); color: var(--tx-hi); font-size: var(--fs-12); border-radius: 8px; }
+.ms-canvas .maplibregl-popup-tip { border-top-color: var(--bg-1); border-bottom-color: var(--bg-1); }
+.ms-canvas .maplibregl-ctrl-attrib { font-size: 9px; }
+
+/* Map Studio 라우터 탭 */
+.ms-router { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+.ms-tabs { display: flex; gap: 4px; padding: 8px 12px 0; flex: 0 0 auto; border-bottom: 1px solid var(--bg-2); }
+.ms-tab {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: var(--fs-12); color: var(--tx-mid);
+  background: transparent; border: none; border-bottom: 2px solid transparent;
+  padding: 7px 12px; cursor: pointer; transition: all .15s;
+}
+.ms-tab:hover { color: var(--tx-hi); }
+.ms-tab.on { color: var(--accent); border-bottom-color: var(--accent); }
+.ms-router-body { flex: 1 1 auto; min-height: 0; }
+
+.ms-radlabel {
+  font-family: "IBM Plex Mono", monospace; font-size: 10px; font-weight: 600;
+  background: rgba(18,21,28,.78); padding: 1px 5px; border-radius: 4px;
+  white-space: nowrap; pointer-events: none;
+}

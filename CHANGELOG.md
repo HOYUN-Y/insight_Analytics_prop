@@ -4,6 +4,31 @@
 
 ---
 
+## [0.6.0] — 2026-06-08 · Map Studio M0 (PoC) — MapLibre 지도 + 반경 동심원
+
+### Added — `js/mapStudio.jsx` (신규)
+- **MapLibre GL JS** 기반 입지 지도 컴포넌트 (OSM 기본 타일, API 키 불필요)
+- 단지 좌표 핀(펄스 마커) + 팝업(사업지명·주소)
+- **반경 2/3/5km 동심원**(dashed) + km 라벨 마커 + 색상별 토글 버튼
+- `MapRouter`: 지도 모드 탭 전환 — **Map Studio**(MapLibre) ↔ **분포 지도**(기존 ECharts)
+- `circleGeoJSON` 자체 구현(위경도 보정), `NavigationControl`·`ScaleControl`, `ResizeObserver`로 캔버스 리사이즈
+- "단지로" 재중심 버튼
+
+### Changed
+- `js/store.jsx`: `SAMPLE_PROJECT.coord { lat, lng }` 추가 (천안 성성동) → `v=4`
+- `js/app.jsx`: map 모드 라우팅을 `MapRouter`로 → `v=3`
+- `index.html`: maplibre-gl 4.7.1 CSS/JS CDN, `mapStudio.jsx` 스크립트 추가
+- `css/map.css`: `.ms-*` Map Studio 스타일 (툴바·캔버스·핀·반경 라벨·탭)
+
+### 검증
+- 미리보기로 천안 성성동 OSM 타일·핀·동심원·토글 렌더 확인 (캔버스 713px 정상)
+- 트러블슈팅: ① 라벨 symbol 레이어 glyphs 의존 → HTML 마커로 대체 ② maplibre-gl.css가 컨테이너 position:relative 강제 → 명시적 100% 높이로 해결
+
+### 다음 (M1~)
+- VWorld/MapTiler 타일 전환(키), Overpass 철도·도로 추출·레이어, PPT 익스포트 — docs/MAP_FEATURE_PLAN.md
+
+---
+
 ## [계획] — 2026-06-08 · Map Studio 기능 계획 수립
 
 ### Added — `docs/MAP_FEATURE_PLAN.md` (신규)

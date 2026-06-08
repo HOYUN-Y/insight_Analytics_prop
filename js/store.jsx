@@ -13,6 +13,7 @@
     siteName: "천안 서북구 성성7지구 공동주택",
     type: "apartment", saleMethod: "general",
     address: "천안시 서북구 성성동 366-3번지 일원",
+    coord: { lat: 36.8389, lng: 127.1278 }, // 성성동 일원 (PoC 지도 중심)
     developer: "웰메이드개발", builder: "", builderTier: "미정",
     saleDate: "2026-01", moveInDate: "2029-01",
     stage: "planning",

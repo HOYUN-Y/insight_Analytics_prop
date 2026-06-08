@@ -61,6 +61,8 @@
       content = window.CleanMode();
     } else if (mode === "visualize" && window.VizMode) {
       content = window.VizMode();
+    } else if (mode === "map" && window.MapRouter) {
+      content = <window.MapRouter />;
     } else if (mode === "map" && window.MapMode) {
       content = window.MapMode();
     } else if (mode === "dashboard" && window.DashMode) {
