@@ -4,6 +4,22 @@
 
 ---
 
+## [0.6.2] — 2026-06-08 · Map Studio M2 — 학교·병원·역 포인트 레이어
+
+### Added — `js/mapStudio.jsx`
+- **포인트 레이어**: 학교(`amenity=school`), 병원·의원(`hospital/clinic`), 역·승강장(`railway=station`/`station=subway`/`subway_entrance`)
+- circle 레이어 렌더(색상별) + 클릭 시 이름 팝업 + 커서 포인터
+- `LAYER_DEFS` 기반 레이어 패널 일원화 (철도·도로 선 + 학교·병원·역 점, 각 토글·개수)
+- 키 불필요: 전부 Overpass(OSM)에서 수급 — 검증: 천안 5km 학교 81·병원의원 79·역 18
+
+### Fixed — `js/mapStudio.jsx`
+- 조합 Overpass 쿼리 **504(과부하)** → 선 쿼리·점 쿼리 **2개로 분리**(`Promise.all`)해 해결
+
+### Changed
+- `index.html`: `mapStudio.jsx?v=9` / 배지 M1 → M2 / 버튼 "주변 시설 불러오기"
+
+---
+
 ## [0.6.1] — 2026-06-08 · Map Studio M1 — Overpass 철도·도로 레이어
 
 ### Added — `js/mapStudio.jsx`

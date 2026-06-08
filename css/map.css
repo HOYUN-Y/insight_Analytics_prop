@@ -116,3 +116,5 @@
 .ms-lyr em { margin-left: auto; font-style: normal; font-family: "IBM Plex Mono", monospace; font-size: var(--fs-10); color: var(--tx-faint); }
 .ms-lyr-src { font-size: 9px; color: var(--tx-faint); margin-top: 2px; }
 .ms-lyr-err { background: rgba(18,21,28,.92); border: 1px solid var(--neg); color: var(--neg); font-size: var(--fs-11); padding: 6px 9px; border-radius: 8px; }
+
+.ms-lyr-sw.dot { width: 10px; height: 10px; border-radius: 50%; }

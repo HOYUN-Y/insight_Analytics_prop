@@ -26,6 +26,15 @@
     { km: 5, color: "#fb8a44" },
   ];
 
+  // 레이어 패널 정의 (선=막대, 점=동그라미)
+  const LAYER_DEFS = [
+    { key: "rail",    label: "철도·지하철", color: "#c98bf0" },
+    { key: "road",    label: "주요도로",   color: "#fb8a44" },
+    { key: "school",  label: "학교",       color: "#79e0a8", dot: true },
+    { key: "medical", label: "병원·의원",  color: "#f08e86", dot: true },
+    { key: "station", label: "역·승강장",  color: "#7ba1fc", dot: true },
+  ];
+
   // 로컬 시크릿 로더 — keys.local.env (KEY=VALUE 형식, .gitignore 처리됨)
   let _keysCache = null;
   function loadKeys() {
@@ -84,7 +93,7 @@
     const [osm, setOsm] = React.useState(null);        // { rail, road, counts }
     const [osmLoading, setOsmLoading] = React.useState(false);
     const [osmErr, setOsmErr] = React.useState(null);
-    const [layerVis, setLayerVis] = React.useState({ rail: true, road: true });
+    const [layerVis, setLayerVis] = React.useState({ rail: true, road: true, school: true, medical: true, station: true });
 
     const coord = (project && project.coord) || { lat: 36.8389, lng: 127.1278 };
     const center = [coord.lng, coord.lat];
@@ -199,7 +208,7 @@
       if (map) map.flyTo({ center, zoom: 12.5 });
     }
 
-    // M1: Overpass로 반경 내 철도·도로 추출
+    // M1+M2: Overpass로 반경 내 철도·도로(선) + 학교·병원·역(점) 추출
     function loadOSM() {
       setOsmLoading(true); setOsmErr(null);
       const km = 5;
@@ -207,27 +216,55 @@
       const lngR = km / (111.320 * Math.cos((coord.lat * Math.PI) / 180));
       const s = coord.lat - latR, n = coord.lat + latR, w = coord.lng - lngR, e = coord.lng + lngR;
       const bbox = s + "," + w + "," + n + "," + e;
-      const q =
+      // 무거운 조합 쿼리는 504를 유발 → 선/점 두 요청으로 분리 (각각 가벼움)
+      const qLines =
         "[out:json][timeout:25];(" +
         'way["railway"~"^(subway|rail|light_rail|tram)$"](' + bbox + ");" +
         'way["highway"~"^(motorway|trunk|primary|secondary)$"](' + bbox + ");" +
         ");out geom;";
-      fetch("https://overpass-api.de/api/interpreter", {
-        method: "POST",
-        body: "data=" + encodeURIComponent(q),
-      })
-        .then((r) => (r.ok ? r.json() : Promise.reject(new Error("Overpass " + r.status))))
-        .then((json) => {
-          const rail = { type: "FeatureCollection", features: [] };
-          const road = { type: "FeatureCollection", features: [] };
-          (json.elements || []).forEach((el) => {
-            if (el.type !== "way" || !el.geometry) return;
-            const coords = el.geometry.map((g) => [g.lon, g.lat]);
-            const f = { type: "Feature", geometry: { type: "LineString", coordinates: coords }, properties: el.tags || {} };
-            if (el.tags && el.tags.railway) rail.features.push(f);
-            else if (el.tags && el.tags.highway) road.features.push(f);
+      const qPoints =
+        "[out:json][timeout:25];(" +
+        'nwr["amenity"="school"](' + bbox + ");" +
+        'nwr["amenity"~"^(hospital|clinic)$"](' + bbox + ");" +
+        'node["railway"="station"](' + bbox + ");" +
+        'node["station"="subway"](' + bbox + ");" +
+        'node["railway"="subway_entrance"](' + bbox + ");" +
+        ");out center tags;";
+      const ovp = (q) =>
+        fetch("https://overpass-api.de/api/interpreter", { method: "POST", body: "data=" + encodeURIComponent(q) })
+          .then((r) => (r.ok ? r.json() : Promise.reject(new Error("Overpass " + r.status))));
+
+      Promise.all([ovp(qLines), ovp(qPoints)])
+        .then((jsons) => {
+          const elements = [].concat(jsons[0].elements || [], jsons[1].elements || []);
+          const fc = () => ({ type: "FeatureCollection", features: [] });
+          const rail = fc(), road = fc(), school = fc(), medical = fc(), station = fc();
+          const ptLngLat = (el) =>
+            el.lat != null ? [el.lon, el.lat] : (el.center ? [el.center.lon, el.center.lat] : null);
+          elements.forEach((el) => {
+            const t = el.tags || {};
+            // 선
+            if (el.geometry && (t.railway && /^(subway|rail|light_rail|tram)$/.test(t.railway) || t.highway)) {
+              const f = { type: "Feature", geometry: { type: "LineString", coordinates: el.geometry.map((g) => [g.lon, g.lat]) }, properties: t };
+              if (t.railway) rail.features.push(f);
+              else if (t.highway) road.features.push(f);
+              return;
+            }
+            // 점
+            const ll = ptLngLat(el);
+            if (!ll) return;
+            const f = { type: "Feature", geometry: { type: "Point", coordinates: ll }, properties: { name: t.name || t["name:ko"] || "" } };
+            if (t.amenity === "school") school.features.push(f);
+            else if (t.amenity === "hospital" || t.amenity === "clinic") medical.features.push(f);
+            else if (t.railway === "station" || t.station === "subway" || t.railway === "subway_entrance") station.features.push(f);
           });
-          setOsm({ rail, road, counts: { rail: rail.features.length, road: road.features.length } });
+          setOsm({
+            rail, road, school, medical, station,
+            counts: {
+              rail: rail.features.length, road: road.features.length,
+              school: school.features.length, medical: medical.features.length, station: station.features.length,
+            },
+          });
           setOsmLoading(false);
         })
         .catch((err) => { setOsmErr(String(err.message || err)); setOsmLoading(false); });
@@ -264,6 +301,30 @@
             },
           });
         }
+
+        // M2: 포인트 레이어 (학교·병원·역)
+        const pt = (id, data, color, radius) => {
+          if (map.getSource(id)) { map.getSource(id).setData(data); return; }
+          map.addSource(id, { type: "geojson", data });
+          map.addLayer({
+            id: id + "-circle", type: "circle", source: id,
+            paint: {
+              "circle-radius": radius, "circle-color": color,
+              "circle-stroke-width": 1.4, "circle-stroke-color": "#12151c", "circle-opacity": 0.95,
+            },
+          });
+          // 클릭 팝업 (이름)
+          map.on("click", id + "-circle", (ev) => {
+            const f = ev.features && ev.features[0];
+            const nm = f && f.properties && f.properties.name;
+            if (nm) new window.maplibregl.Popup({ offset: 10 }).setLngLat(ev.lngLat).setHTML("<b>" + nm + "</b>").addTo(map);
+          });
+          map.on("mouseenter", id + "-circle", () => { map.getCanvas().style.cursor = "pointer"; });
+          map.on("mouseleave", id + "-circle", () => { map.getCanvas().style.cursor = ""; });
+        };
+        pt("osm-school", osm.school, "#79e0a8", 4);
+        pt("osm-medical", osm.medical, "#f08e86", 4);
+        pt("osm-station", osm.station, "#7ba1fc", 5.5);
       };
       if (map.isStyleLoaded()) apply(); else map.once("idle", apply);
     }, [osm, ready]);
@@ -272,8 +333,12 @@
     React.useEffect(() => {
       const map = mapRef.current;
       if (!map || !ready) return;
-      if (map.getLayer("osm-rail-line")) map.setLayoutProperty("osm-rail-line", "visibility", layerVis.rail ? "visible" : "none");
-      if (map.getLayer("osm-road-line")) map.setLayoutProperty("osm-road-line", "visibility", layerVis.road ? "visible" : "none");
+      const vis = (layerId, on) => { if (map.getLayer(layerId)) map.setLayoutProperty(layerId, "visibility", on ? "visible" : "none"); };
+      vis("osm-rail-line", layerVis.rail);
+      vis("osm-road-line", layerVis.road);
+      vis("osm-school-circle", layerVis.school);
+      vis("osm-medical-circle", layerVis.medical);
+      vis("osm-station-circle", layerVis.station);
     }, [layerVis, ready, osm]);
 
     return (
@@ -282,7 +347,7 @@
           <div className="ms-tb-title">
             <Icon name="map" size={16} />
             <span>{project ? project.siteName || project.name : "Map Studio"}</span>
-            <span className="ms-tb-badge">M1</span>
+            <span className="ms-tb-badge">M2</span>
           </div>
           <div className="ms-tb-actions">
             {RADII.map((r) => (
@@ -303,21 +368,19 @@
           {err && <div className="ms-overlay ms-err">⚠ {err}</div>}
           {!ready && !err && <div className="ms-overlay">지도 로딩 중…</div>}
 
-          {/* M1 레이어 패널 */}
+          {/* M1·M2 레이어 패널 */}
           <div className="ms-layers">
             <button className="ms-load" onClick={loadOSM} disabled={osmLoading}>
-              {osmLoading ? "불러오는 중…" : (osm ? "↻ 다시 불러오기" : "주변 도로·철도 불러오기 (5km)")}
+              {osmLoading ? "불러오는 중…" : (osm ? "↻ 다시 불러오기" : "주변 시설 불러오기 (5km)")}
             </button>
             {osm && (
               <div className="ms-lyr-list">
-                <label className="ms-lyr">
-                  <input type="checkbox" checked={layerVis.rail} onChange={() => setLayerVis((v) => ({ ...v, rail: !v.rail }))} />
-                  <span className="ms-lyr-sw" style={{ background: "#7ba1fc" }} />철도·지하철 <em>{osm.counts.rail}</em>
-                </label>
-                <label className="ms-lyr">
-                  <input type="checkbox" checked={layerVis.road} onChange={() => setLayerVis((v) => ({ ...v, road: !v.road }))} />
-                  <span className="ms-lyr-sw" style={{ background: "#fb8a44" }} />주요도로 <em>{osm.counts.road}</em>
-                </label>
+                {LAYER_DEFS.map((ld) => (
+                  <label className="ms-lyr" key={ld.key}>
+                    <input type="checkbox" checked={layerVis[ld.key]} onChange={() => setLayerVis((v) => ({ ...v, [ld.key]: !v[ld.key] }))} />
+                    <span className={"ms-lyr-sw" + (ld.dot ? " dot" : "")} style={{ background: ld.color }} />{ld.label} <em>{osm.counts[ld.key]}</em>
+                  </label>
+                ))}
                 <div className="ms-lyr-src">출처: © OpenStreetMap</div>
               </div>
             )}
