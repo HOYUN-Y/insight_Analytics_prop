@@ -24,7 +24,9 @@ python3 -m http.server 7474
 # → http://localhost:7474
 ```
 
-빌드 도구·번들러·Node.js 없이 브라우저에서 직접 실행. 인터넷 없는 환경에서도 동작.
+빌드 도구·번들러·Node.js 없이 브라우저에서 직접 실행. (지도 타일·Overpass는 온라인 필요)
+
+**Map Studio 키(선택):** 루트에 `keys.local.env` 생성 — `MAPTILER_KEY=...` (없으면 OSM 폴백). gitignore 처리됨.
 
 ---
 
@@ -50,7 +52,7 @@ python3 -m http.server 7474
 | `data` | Data | ✅ 데이터셋 관리·프로파일링 |
 | `clean` | Clean | ✅ 전처리 파이프라인 (평↔㎡·원↔만원·되돌리기) |
 | `visualize` | Chart | ✅ ECharts 시각화 빌더 |
-| `map` | Map | ✅ 입지 지도 |
+| `map` | Map | ✅ Map Studio(MapLibre — 베이스 전환·반경·철도/도로/POI) + 분포 지도(ECharts) 탭 |
 | `dashboard` | Dash | ✅ 대시보드 |
 | `analysis` | Study | ⬜ Phase 2 |
 | `apihub` | Hub | ⬜ Phase 3 |
@@ -91,11 +93,49 @@ python3 -m http.server 7474
 
 ---
 
+## Map Studio (입지 지도)
+
+> 분양 기획 실무의 "입지 지도 제작"을 손으로 선 따라 그리던 방식에서 **공개 데이터 레이어 렌더**로 전환.
+> 상세 계획·로드맵: [docs/MAP_FEATURE_PLAN.md](./docs/MAP_FEATURE_PLAN.md)
+
+Map 모드는 두 탭으로 구성: **Map Studio**(MapLibre) ↔ **분포 지도**(기존 ECharts 코로플레스).
+
+### 구성
+
+| 기능 | 내용 |
+|------|------|
+| 베이스 지도 | MapTiler 스타일 전환 — 기본/심플/연한(오버레이용)/위성 (키 없으면 OSM 폴백) |
+| 단지 핀 | 프로젝트 좌표(`coord`) 마커 + 팝업(사업지명·주소) |
+| 반경 동심원 | 2 / 3 / 5km dashed + km 라벨, 색상별 토글 |
+| 철도·도로 (선) | Overpass(OSM)에서 추출 — 곡선 그대로, 도로 클래스별(고속/자동차전용/주간선/보조간선) 세분화 |
+| 학교·병원·역 (점) | Overpass 포인트 + 클릭 이름 팝업 |
+| 옵션 | 포인트 **색상 변경**, 반경 5km 밖 클리핑, 역 이름 라벨 상시 표시 |
+
+### 키 설정
+
+API 키는 프로젝트 루트 **`keys.local.env`** (gitignore, 커밋 안 됨)에 `KEY=VALUE`로 저장:
+
+```
+MAPTILER_KEY=발급받은_키
+```
+
+키가 없으면 OSM 기본 타일로 자동 폴백. 데이터(철도·도로·POI)는 Overpass라 키 불필요.
+
+### 데이터 출처
+
+- 배경 타일: MapTiler / OSM
+- 지오메트리(철도·도로·POI): **OpenStreetMap (Overpass API)** — 출처표기 시 자유
+- ⚠️ 네이버·카카오맵은 약관상 산출물 사용 금지
+- 참고 자산: `docs/reference/data reference/국토교통부_도시철도 전체노선` (좌표 없음 → 명칭·순서 참조용)
+
+---
+
 ## 프로젝트 데이터 모델
 
 ```
 Project
 ├── 기본정보        프로젝트명, 사업지명, 주소, 시행사, 시공사, 분양예정, 입주예정
+├── coord           { lat, lng }  ← Map Studio 지도 중심
 ├── 건축개요        층수, 동수, 세대수, 면적, 용적률, 건폐율, 주차
 ├── 사업유형        아파트/오피스텔/상가/지식산업센터/생활숙박시설/기타
 ├── 평형구성        [ { 타입명, 전용㎡, 전용평(auto), 세대수, 형태, Bay, 향 } ]
@@ -178,7 +218,7 @@ DESIGN_SPEC ver2 기준. 정확한 hex/rgba를 CSS 변수로 고정하고 컴포
 | **0 · 셋업** | 브랜드 토큰, 셸, Rail, 스토어 기반 | ✅ 완료 |
 | **1 · Planning Core** | 3-뷰 전환, 11페이지, 인사이트/의사결정/출처/Report Builder | ✅ 완료 |
 | **2 · 뷰 고도화** | 보드 뷰 수평 마인드맵·플로팅 툴바, 대시보드 뷰 세부화 | 🔄 다음 단계 |
-| **2 · Map Studio** | M0 ✅ MapLibre+MapTiler 지도·단지 핀·반경(2/3/5km) / M1~ 철도·도로 레이어·PPT 익스포트 ([계획](./docs/MAP_FEATURE_PLAN.md)) | 🔄 진행 중 |
+| **2 · Map Studio** | M0~M2 ✅ 베이스 전환·반경·철도/도로/POI·색상·옵션 / M3~ PPT 익스포트 ([계획](./docs/MAP_FEATURE_PLAN.md)) | 🔄 진행 중 |
 | **3 · 분석** | 비교사례지수 빌더, 분양가 산정, Map 재구성 | ⬜ Phase 2 |
 | **4 · 고도화** | API Hub, Mind Map 인터랙티브, 프로젝트 JSON 내보내기 | ⬜ Phase 3 |
 

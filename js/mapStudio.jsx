@@ -1,6 +1,9 @@
-/* insight Analytics Prop — Map Studio (PoC / M0)
- * MapLibre GL JS 기반 입지 지도. 현 단계: OSM 배경 타일 + 단지 핀 + 반경(2/3/5km) 동심원.
- * 다음 단계(M1): Overpass로 철도·도로 추출 → 레이어 렌더. 자세한 계획은 docs/MAP_FEATURE_PLAN.md
+/* insight Analytics Prop — Map Studio (M0~M2.1)
+ * MapLibre GL JS 기반 입지 지도.
+ *  - 베이스 지도: MapTiler 스타일 전환(기본/심플/연한/위성) ↔ OSM 폴백 (키: keys.local.env)
+ *  - 단지 핀 + 반경(2/3/5km) 동심원
+ *  - Overpass(OSM): 철도·도로(선, 클래스별), 학교·병원·역(점, 색상변경/클리핑/라벨)
+ * 다음(M3): 현재 지도 → PNG → PptxGenJS PPT 익스포트. 자세한 계획·로드맵은 docs/MAP_FEATURE_PLAN.md
  */
 (function () {
   const { useStore } = window.Store;
