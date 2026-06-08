@@ -4,6 +4,23 @@
 
 ---
 
+## [0.6.1] — 2026-06-08 · Map Studio M1 — Overpass 철도·도로 레이어
+
+### Added — `js/mapStudio.jsx`
+- **Overpass API**로 반경 5km bbox 내 철도(`railway`)·주요도로(`highway`) 추출 → GeoJSON 변환 (`loadOSM`)
+- 지도 레이어 렌더: 철도(보라, `subway/light_rail` 구분), 도로(위계별 색·굵기 `motorway>trunk>primary>secondary`)
+- **레이어 패널**: "주변 도로·철도 불러오기" 버튼 + 철도/도로 체크박스 토글 + 추출 개수 + OSM 출처 표기
+- 검증: 천안 성성동 5km → 철도 242 + 도로 575 자동 렌더·토글 확인 (수작업 트레이싱 제거)
+
+### Fixed — `js/mapStudio.jsx`
+- **지도 초기화 0-size 레이스 근본 수정**: `whenSized()`로 컨테이너 크기 확보 후 맵 생성
+- `load` 이벤트 누락 대비: `isStyleLoaded` 즉시 / `load`+`idle` 양쪽 대기 + 멱등(`setup._done`) 처리
+
+### Changed
+- `index.html`: `mapStudio.jsx?v=7` / 헤더 배지 M0 → M1
+
+---
+
 ## [0.6.0] — 2026-06-08 · Map Studio M0 (PoC) — MapLibre 지도 + 반경 동심원
 
 ### Added — `js/mapStudio.jsx` (신규)

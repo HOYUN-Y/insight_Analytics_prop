@@ -44,6 +44,18 @@
       .catch(() => ({}));
   }
 
+  // 컨테이너가 실제 크기를 가질 때까지 대기 (탭/지연 레이아웃에서 0-size로 맵이 생성돼 load가 안 끝나는 문제 방지)
+  function whenSized(el) {
+    return new Promise((resolve) => {
+      if (el.clientWidth > 0 && el.clientHeight > 0) return resolve();
+      if (!window.ResizeObserver) { setTimeout(resolve, 60); return; }
+      const ro = new ResizeObserver(() => {
+        if (el.clientWidth > 0 && el.clientHeight > 0) { ro.disconnect(); resolve(); }
+      });
+      ro.observe(el);
+    });
+  }
+
   // 키 유무에 따라 MapTiler(벡터) ↔ OSM(래스터) 스타일 선택
   function buildStyle(keys) {
     const k = keys && keys.MAPTILER_KEY;
@@ -69,6 +81,10 @@
     const [err, setErr] = React.useState(null);
     const [shownRadii, setShownRadii] = React.useState({ 2: true, 3: true, 5: true });
     const [tileMode, setTileMode] = React.useState("osm");
+    const [osm, setOsm] = React.useState(null);        // { rail, road, counts }
+    const [osmLoading, setOsmLoading] = React.useState(false);
+    const [osmErr, setOsmErr] = React.useState(null);
+    const [layerVis, setLayerVis] = React.useState({ rail: true, road: true });
 
     const coord = (project && project.coord) || { lat: 36.8389, lng: 127.1278 };
     const center = [coord.lng, coord.lat];
@@ -80,7 +96,8 @@
 
       let cancelled = false, map, ro;
 
-      loadKeys().then((keys) => {
+      Promise.all([loadKeys(), whenSized(containerRef.current)]).then((res) => {
+        const keys = res[0];
         if (cancelled || !containerRef.current || mapRef.current) return;
         const built = buildStyle(keys);
         setTileMode(built.mode);
@@ -97,7 +114,7 @@
 
         mapRef.current = map;
 
-        // 컨테이너 크기 확정/변경 시 캔버스 리사이즈 (탭·지연 레이아웃 대응)
+        // 이후 컨테이너 크기 변경 시 캔버스 리사이즈
         if (window.ResizeObserver) {
           ro = new ResizeObserver(() => { try { map.resize(); } catch (_) {} });
           ro.observe(containerRef.current);
@@ -108,41 +125,48 @@
 
         const radiusMarkers = radiusMkRef.current = [];
 
-        map.on("load", () => {
-        // 반경 동심원 (line) — 라벨은 글리프 폰트 의존이라 PoC에선 HTML 마커로 대체
-        RADII.forEach((r) => {
-          const srcId = "radius-" + r.km;
-          map.addSource(srcId, { type: "geojson", data: circleGeoJSON(center, r.km) });
-          map.addLayer({
-            id: srcId + "-line", type: "line", source: srcId,
-            paint: { "line-color": r.color, "line-width": 2.4, "line-dasharray": [2, 1.4], "line-opacity": 1 },
+        const setup = () => {
+          if (cancelled || setup._done) return;
+          setup._done = true;
+          // 반경 동심원 (line) — 라벨은 글리프 폰트 의존이라 HTML 마커로 대체
+          RADII.forEach((r) => {
+            const srcId = "radius-" + r.km;
+            if (!map.getSource(srcId)) {
+              map.addSource(srcId, { type: "geojson", data: circleGeoJSON(center, r.km) });
+              map.addLayer({
+                id: srcId + "-line", type: "line", source: srcId,
+                paint: { "line-color": r.color, "line-width": 2.4, "line-dasharray": [2, 1.4], "line-opacity": 1 },
+              });
+            }
+            const labelEl = document.createElement("div");
+            labelEl.className = "ms-radlabel";
+            labelEl.textContent = r.km + "km";
+            labelEl.style.color = r.color;
+            const labelMk = new window.maplibregl.Marker({ element: labelEl, anchor: "bottom" })
+              .setLngLat([center[0], center[1] + r.km / 110.574])
+              .addTo(map);
+            radiusMarkers.push({ km: r.km, marker: labelMk });
           });
-          // 반경 라벨 (북쪽 끝점에 HTML 마커)
-          const labelEl = document.createElement("div");
-          labelEl.className = "ms-radlabel";
-          labelEl.textContent = r.km + "km";
-          labelEl.style.color = r.color;
-          const labelMk = new window.maplibregl.Marker({ element: labelEl, anchor: "bottom" })
-            .setLngLat([center[0], center[1] + r.km / 110.574])
+
+          // 단지 핀
+          const el = document.createElement("div");
+          el.className = "ms-pin";
+          el.innerHTML = '<div class="ms-pin-dot"></div><div class="ms-pin-pulse"></div>';
+          new window.maplibregl.Marker({ element: el, anchor: "center" })
+            .setLngLat(center)
+            .setPopup(new window.maplibregl.Popup({ offset: 16 }).setHTML(
+              '<b>' + (project ? project.siteName || project.name : "단지") + '</b><br/>' +
+              (project ? project.address || "" : "")
+            ))
             .addTo(map);
-          radiusMarkers.push({ km: r.km, marker: labelMk });
-        });
-        map.resize(); // 탭 컨테이너 사이즈 반영
 
-        // 단지 핀
-        const el = document.createElement("div");
-        el.className = "ms-pin";
-        el.innerHTML = '<div class="ms-pin-dot"></div><div class="ms-pin-pulse"></div>';
-        new window.maplibregl.Marker({ element: el, anchor: "center" })
-          .setLngLat(center)
-          .setPopup(new window.maplibregl.Popup({ offset: 16 }).setHTML(
-            '<b>' + (project ? project.siteName || project.name : "단지") + '</b><br/>' +
-            (project ? project.address || "" : "")
-          ))
-          .addTo(map);
-
+          map.resize();
           setReady(true);
-        });
+        };
+
+        // load 이벤트가 누락되는 레이스 대비: 이미 로드됐으면 즉시, 아니면 load/idle 양쪽 대기
+        if (map.isStyleLoaded()) setup();
+        else { map.on("load", setup); map.once("idle", setup); }
 
         map.on("error", (e) => { if (e && e.error) console.warn("[MapStudio]", e.error); });
       });
@@ -175,13 +199,90 @@
       if (map) map.flyTo({ center, zoom: 12.5 });
     }
 
+    // M1: Overpass로 반경 내 철도·도로 추출
+    function loadOSM() {
+      setOsmLoading(true); setOsmErr(null);
+      const km = 5;
+      const latR = km / 110.574;
+      const lngR = km / (111.320 * Math.cos((coord.lat * Math.PI) / 180));
+      const s = coord.lat - latR, n = coord.lat + latR, w = coord.lng - lngR, e = coord.lng + lngR;
+      const bbox = s + "," + w + "," + n + "," + e;
+      const q =
+        "[out:json][timeout:25];(" +
+        'way["railway"~"^(subway|rail|light_rail|tram)$"](' + bbox + ");" +
+        'way["highway"~"^(motorway|trunk|primary|secondary)$"](' + bbox + ");" +
+        ");out geom;";
+      fetch("https://overpass-api.de/api/interpreter", {
+        method: "POST",
+        body: "data=" + encodeURIComponent(q),
+      })
+        .then((r) => (r.ok ? r.json() : Promise.reject(new Error("Overpass " + r.status))))
+        .then((json) => {
+          const rail = { type: "FeatureCollection", features: [] };
+          const road = { type: "FeatureCollection", features: [] };
+          (json.elements || []).forEach((el) => {
+            if (el.type !== "way" || !el.geometry) return;
+            const coords = el.geometry.map((g) => [g.lon, g.lat]);
+            const f = { type: "Feature", geometry: { type: "LineString", coordinates: coords }, properties: el.tags || {} };
+            if (el.tags && el.tags.railway) rail.features.push(f);
+            else if (el.tags && el.tags.highway) road.features.push(f);
+          });
+          setOsm({ rail, road, counts: { rail: rail.features.length, road: road.features.length } });
+          setOsmLoading(false);
+        })
+        .catch((err) => { setOsmErr(String(err.message || err)); setOsmLoading(false); });
+    }
+
+    // 추출된 OSM 데이터를 지도 레이어로 반영
+    React.useEffect(() => {
+      const map = mapRef.current;
+      if (!map || !ready || !osm) return;
+      const apply = () => {
+        // 도로 먼저 (철도가 위로 오도록)
+        if (map.getSource("osm-road")) map.getSource("osm-road").setData(osm.road);
+        else {
+          map.addSource("osm-road", { type: "geojson", data: osm.road });
+          map.addLayer({
+            id: "osm-road-line", type: "line", source: "osm-road",
+            layout: { "line-cap": "round", "line-join": "round" },
+            paint: {
+              "line-color": ["match", ["get", "highway"], "motorway", "#f08e86", "trunk", "#fb8a44", "primary", "#e6b35a", "secondary", "#c9cf60", "#9aa0ab"],
+              "line-width": ["match", ["get", "highway"], "motorway", 3.4, "trunk", 2.8, "primary", 2.2, "secondary", 1.5, 1.2],
+              "line-opacity": 0.85,
+            },
+          });
+        }
+        if (map.getSource("osm-rail")) map.getSource("osm-rail").setData(osm.rail);
+        else {
+          map.addSource("osm-rail", { type: "geojson", data: osm.rail });
+          map.addLayer({
+            id: "osm-rail-line", type: "line", source: "osm-rail",
+            layout: { "line-cap": "round", "line-join": "round" },
+            paint: {
+              "line-color": ["match", ["get", "railway"], "subway", "#7ba1fc", "light_rail", "#7ba1fc", "tram", "#9b7bfc", "#c98bf0"],
+              "line-width": 2.4,
+            },
+          });
+        }
+      };
+      if (map.isStyleLoaded()) apply(); else map.once("idle", apply);
+    }, [osm, ready]);
+
+    // OSM 레이어 표시/숨김
+    React.useEffect(() => {
+      const map = mapRef.current;
+      if (!map || !ready) return;
+      if (map.getLayer("osm-rail-line")) map.setLayoutProperty("osm-rail-line", "visibility", layerVis.rail ? "visible" : "none");
+      if (map.getLayer("osm-road-line")) map.setLayoutProperty("osm-road-line", "visibility", layerVis.road ? "visible" : "none");
+    }, [layerVis, ready, osm]);
+
     return (
       <div className="ms-root">
         <div className="ms-toolbar">
           <div className="ms-tb-title">
             <Icon name="map" size={16} />
             <span>{project ? project.siteName || project.name : "Map Studio"}</span>
-            <span className="ms-tb-badge">PoC · M0</span>
+            <span className="ms-tb-badge">M1</span>
           </div>
           <div className="ms-tb-actions">
             {RADII.map((r) => (
@@ -201,6 +302,27 @@
           <div ref={containerRef} className="ms-canvas" />
           {err && <div className="ms-overlay ms-err">⚠ {err}</div>}
           {!ready && !err && <div className="ms-overlay">지도 로딩 중…</div>}
+
+          {/* M1 레이어 패널 */}
+          <div className="ms-layers">
+            <button className="ms-load" onClick={loadOSM} disabled={osmLoading}>
+              {osmLoading ? "불러오는 중…" : (osm ? "↻ 다시 불러오기" : "주변 도로·철도 불러오기 (5km)")}
+            </button>
+            {osm && (
+              <div className="ms-lyr-list">
+                <label className="ms-lyr">
+                  <input type="checkbox" checked={layerVis.rail} onChange={() => setLayerVis((v) => ({ ...v, rail: !v.rail }))} />
+                  <span className="ms-lyr-sw" style={{ background: "#7ba1fc" }} />철도·지하철 <em>{osm.counts.rail}</em>
+                </label>
+                <label className="ms-lyr">
+                  <input type="checkbox" checked={layerVis.road} onChange={() => setLayerVis((v) => ({ ...v, road: !v.road }))} />
+                  <span className="ms-lyr-sw" style={{ background: "#fb8a44" }} />주요도로 <em>{osm.counts.road}</em>
+                </label>
+                <div className="ms-lyr-src">출처: © OpenStreetMap</div>
+              </div>
+            )}
+            {osmErr && <div className="ms-lyr-err">⚠ {osmErr}</div>}
+          </div>
         </div>
         <div className="ms-footnote">
           타일: {tileMode === "maptiler" ? "MapTiler streets-v2 (키 적용)" : "OSM 기본 (키 없음)"} · 다음: Overpass 철도·도로 레이어 · PPT 익스포트 — docs/MAP_FEATURE_PLAN.md
