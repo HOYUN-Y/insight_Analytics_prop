@@ -72,10 +72,19 @@
     });
   }
 
+  // 베이스 지도(MapTiler 스타일) 선택지
+  const BASE_STYLES = [
+    { id: "streets-v2",    label: "기본 지도" },
+    { id: "basic-v2",      label: "심플" },
+    { id: "dataviz-light", label: "연한(오버레이용)" },
+    { id: "hybrid",        label: "위성" },
+  ];
+  const maptilerStyleUrl = (styleId, key) => "https://api.maptiler.com/maps/" + (styleId || "streets-v2") + "/style.json?key=" + key;
+
   // 키 유무에 따라 MapTiler(벡터) ↔ OSM(래스터) 스타일 선택
-  function buildStyle(keys) {
+  function buildStyle(keys, styleId) {
     const k = keys && keys.MAPTILER_KEY;
-    if (k) return { style: "https://api.maptiler.com/maps/streets-v2/style.json?key=" + k, mode: "maptiler" };
+    if (k) return { style: maptilerStyleUrl(styleId, k), mode: "maptiler" };
     return {
       style: {
         version: 8,
@@ -94,6 +103,8 @@
     const mapRef = React.useRef(null);
     const initLockRef = React.useRef(false);
     const radiusMkRef = React.useRef([]);
+    const keyRef = React.useRef(null);
+    const firstStyleRef = React.useRef(true);
     const [ready, setReady] = React.useState(false);
     const [err, setErr] = React.useState(null);
     const [shownRadii, setShownRadii] = React.useState({ 2: true, 3: true, 5: true });
@@ -107,6 +118,8 @@
     const [stationLabels, setStationLabels] = React.useState(false); // 역 이름 상시 표시
     const [roadSplit, setRoadSplit] = React.useState(false);  // 도로 클래스별 세분화
     const [roadClasses, setRoadClasses] = React.useState({ motorway: true, trunk: true, primary: true, secondary: true });
+    const [baseStyle, setBaseStyle] = React.useState("streets-v2");
+    const [styleEpoch, setStyleEpoch] = React.useState(0); // 베이스 스타일 교체 후 레이어 재적용 트리거
 
     const coord = (project && project.coord) || { lat: 36.8389, lng: 127.1278 };
     const center = [coord.lng, coord.lat];
@@ -122,7 +135,8 @@
       Promise.all([loadKeys(), whenSized(containerRef.current)]).then((res) => {
         const keys = res[0];
         if (cancelled || !containerRef.current || mapRef.current) return;
-        const built = buildStyle(keys);
+        keyRef.current = keys && keys.MAPTILER_KEY;
+        const built = buildStyle(keys, baseStyle);
         setTileMode(built.mode);
 
         try {
@@ -153,16 +167,8 @@
           try { map.addSource("__probe__", { type: "geojson", data: { type: "FeatureCollection", features: [] } }); map.removeSource("__probe__"); }
           catch (_) { setTimeout(setup, 150); return; } // 아직 스타일 미준비 → 재시도
           setup._done = true;
-          // 반경 동심원 (line) — 라벨은 글리프 폰트 의존이라 HTML 마커로 대체
+          // 반경 라벨 마커 (동심원 line 레이어는 별도 effect에서 추가/재추가)
           RADII.forEach((r) => {
-            const srcId = "radius-" + r.km;
-            if (!map.getSource(srcId)) {
-              map.addSource(srcId, { type: "geojson", data: circleGeoJSON(center, r.km) });
-              map.addLayer({
-                id: srcId + "-line", type: "line", source: srcId,
-                paint: { "line-color": r.color, "line-width": 2.4, "line-dasharray": [2, 1.4], "line-opacity": 1 },
-              });
-            }
             const labelEl = document.createElement("div");
             labelEl.className = "ms-radlabel";
             labelEl.textContent = r.km + "km";
@@ -207,6 +213,36 @@
       };
     }, [coord.lat, coord.lng]);
 
+    // 베이스 스타일 교체 (MapTiler 한정) — 사용자/오버레이 레이어는 styleEpoch로 재적용
+    React.useEffect(() => {
+      const map = mapRef.current;
+      if (!map || !ready || tileMode !== "maptiler" || !keyRef.current) return;
+      if (firstStyleRef.current) { firstStyleRef.current = false; return; }
+      map.setStyle(maptilerStyleUrl(baseStyle, keyRef.current));
+      map.once("idle", () => setStyleEpoch((e) => e + 1));
+    }, [baseStyle, ready]);
+
+    // 반경 동심원 line 레이어 추가/재추가 (초기 + 스타일 교체 후)
+    React.useEffect(() => {
+      const map = mapRef.current;
+      if (!map || !ready) return;
+      const add = () => {
+        try {
+          RADII.forEach((r) => {
+            const srcId = "radius-" + r.km;
+            if (!map.getSource(srcId)) map.addSource(srcId, { type: "geojson", data: circleGeoJSON(center, r.km) });
+            if (!map.getLayer(srcId + "-line")) {
+              map.addLayer({
+                id: srcId + "-line", type: "line", source: srcId,
+                paint: { "line-color": r.color, "line-width": 2.4, "line-dasharray": [2, 1.4], "line-opacity": 1 },
+              });
+            }
+          });
+        } catch (_) { setTimeout(add, 150); }
+      };
+      add();
+    }, [ready, styleEpoch]);
+
     // 반경 토글 반영
     React.useEffect(() => {
       const map = mapRef.current;
@@ -220,7 +256,7 @@
         const el = rm.marker.getElement();
         if (el) el.style.display = shownRadii[rm.km] ? "" : "none";
       });
-    }, [shownRadii, ready]);
+    }, [shownRadii, ready, styleEpoch]);
 
     function recenter() {
       const map = mapRef.current;
@@ -383,7 +419,7 @@
       };
       run();
       return () => { alive = false; };
-    }, [osm, ready]);
+    }, [osm, ready, styleEpoch]);
 
     // OSM 레이어 표시/숨김
     React.useEffect(() => {
@@ -396,7 +432,7 @@
       vis("osm-medical-circle", layerVis.medical);
       vis("osm-station-circle", layerVis.station);
       vis("osm-station-label", layerVis.station && stationLabels);
-    }, [layerVis, ready, osm, stationLabels]);
+    }, [layerVis, ready, osm, stationLabels, styleEpoch]);
 
     // 색상 변경 반영
     React.useEffect(() => {
@@ -408,7 +444,7 @@
       setC("osm-medical-circle", "circle-color", colors.medical);
       setC("osm-station-circle", "circle-color", colors.station);
       setC("osm-station-label", "text-color", colors.station);
-    }, [colors, ready, osm]);
+    }, [colors, ready, osm, styleEpoch]);
 
     // 반경(5km) 밖 포인트 클리핑
     React.useEffect(() => {
@@ -418,7 +454,7 @@
       ["osm-school-circle", "osm-medical-circle", "osm-station-circle", "osm-station-label"].forEach((id) => {
         if (map.getLayer(id)) map.setFilter(id, flt);
       });
-    }, [clip, ready, osm]);
+    }, [clip, ready, osm, styleEpoch]);
 
     // 도로 클래스별 필터
     React.useEffect(() => {
@@ -427,7 +463,7 @@
       if (!roadSplit) { map.setFilter("osm-road-line", null); return; }
       const active = Object.keys(roadClasses).filter((k) => roadClasses[k]);
       map.setFilter("osm-road-line", ["in", ["get", "highway"], ["literal", active]]);
-    }, [roadSplit, roadClasses, ready, osm]);
+    }, [roadSplit, roadClasses, ready, osm, styleEpoch]);
 
     return (
       <div className="ms-root">
@@ -438,6 +474,11 @@
             <span className="ms-tb-badge">M2</span>
           </div>
           <div className="ms-tb-actions">
+            {tileMode === "maptiler" && (
+              <select className="ms-base-sel" value={baseStyle} onChange={(e) => setBaseStyle(e.target.value)} title="베이스 지도">
+                {BASE_STYLES.map((b) => <option key={b.id} value={b.id}>{b.label}</option>)}
+              </select>
+            )}
             {RADII.map((r) => (
               <button
                 key={r.km}

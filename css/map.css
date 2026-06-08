@@ -142,3 +142,10 @@
 .ms-opts { display: flex; flex-direction: column; gap: 5px; margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--bg-2); }
 .ms-opt { display: flex; align-items: center; gap: 7px; font-size: var(--fs-11); color: var(--tx-mid); cursor: pointer; }
 .ms-opt input, .ms-sub input { accent-color: var(--accent); }
+
+/* Map Studio — 베이스 지도 선택 */
+.ms-base-sel {
+  font-size: var(--fs-11); color: var(--tx-hi); background: var(--bg-1);
+  border: 1px solid var(--bg-2); border-radius: 6px; padding: 4px 8px; cursor: pointer;
+}
+.ms-base-sel:hover { background: var(--bg-2); }
