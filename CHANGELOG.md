@@ -4,6 +4,19 @@
 
 ---
 
+## [계획] — 2026-06-08 · Map Studio 기능 계획 수립
+
+### Added — `docs/MAP_FEATURE_PLAN.md` (신규)
+- 입지 지도 시각화 + PPT 익스포트 기능 설계 문서 작성
+- 배경: 실무의 수작업 트레이싱(곡선 철도·도로·산단 구획) 비효율 → 공개 데이터 레이어 렌더로 전환
+- 데이터 소스 확정: 역/학교/병원(점)=공공데이터포털, 노선/도로(곡선 선형)=**OSM(Overpass)**, 경계(면)=VWorld/OSM
+- 라이선스 정리: VWorld·MapTiler·OSM 사용 가능 / 네이버·카카오 약관상 산출물 사용 금지
+- 기술 스택: MapLibre GL JS + turf.js(반경 버퍼) + PptxGenJS(`custGeom` 베지어 → 편집 가능 PPT)
+- PPT 익스포트 2경로: A(이미지·쉬움) / B(편집 가능 벡터·R&D) → 하이브리드 권장
+- 로드맵 M0~M6 정의 (PoC → 반경+레이어 → 포인트 → 이미지 익스포트 → 펜 도구 → 벡터 익스포트 → 광역입지)
+
+---
+
 ## [0.5.0] — 2026-06-07 · handoff3 반영 — 출처·레퍼런스, Report Builder, SWOT/가설 인라인 편집
 
 ### Added — `js/planningMode.jsx`
@@ -181,10 +194,11 @@ Planning 모드: `<window.Workspace>` 래퍼 제거 → `<window.PlanningMode />
 
 | 항목 | 우선순위 | Phase | 비고 |
 |------|---------|-------|------|
+| **Map Studio** — 지도 레이어 시각화(지하철·도로·POI) + 반경(2/3/5km) 추출 + PPT 익스포트 | 🔴 필수 | 2 | 상세 계획: [docs/MAP_FEATURE_PLAN.md](./docs/MAP_FEATURE_PLAN.md) |
 | **보드 뷰 재구현** — 수평 트리 마인드맵 + 플로팅 툴바 + 자유 배치 스티키 | 🔴 필수 | 2 | handoff3 `03-plan-view-board` 기준 |
 | **대시보드 뷰 세부화** — 연구질문 연결 분석·담당자, 가설 근거 링크 | 🔴 필수 | 2 | handoff3 `02-plan-view-cockpit` 기준 |
 | Analysis 모드 (비교사례지수·분양가 산정) | 🔴 필수 | 2 | |
-| Map 모드 재구성 (입지 등급 레이어) | 🔴 필수 | 2 | |
+| ~~Map 모드 재구성 (입지 등급 레이어)~~ → **Map Studio**로 통합·확장 | 🔴 필수 | 2 | 위 Map Studio 항목 참조 |
 | Data 모드 부동산 템플릿 12종 | 🟡 강화 | 1 | |
 | Mind Map 페이지 구현 | 🟡 강화 | 3 | |
 | API Hub | 🟢 선택 | 3 | |

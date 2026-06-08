@@ -177,6 +177,7 @@ DESIGN_SPEC ver2 기준. 정확한 hex/rgba를 CSS 변수로 고정하고 컴포
 | **0 · 셋업** | 브랜드 토큰, 셸, Rail, 스토어 기반 | ✅ 완료 |
 | **1 · Planning Core** | 3-뷰 전환, 11페이지, 인사이트/의사결정/출처/Report Builder | ✅ 완료 |
 | **2 · 뷰 고도화** | 보드 뷰 수평 마인드맵·플로팅 툴바, 대시보드 뷰 세부화 | 🔄 다음 단계 |
+| **2 · Map Studio** | 지도 레이어 시각화(지하철·도로·POI) + 반경 추출 + PPT 익스포트 ([계획](./docs/MAP_FEATURE_PLAN.md)) | 📋 계획 수립 |
 | **3 · 분석** | 비교사례지수 빌더, 분양가 산정, Map 재구성 | ⬜ Phase 2 |
 | **4 · 고도화** | API Hub, Mind Map 인터랙티브, 프로젝트 JSON 내보내기 | ⬜ Phase 3 |
 
@@ -187,6 +188,7 @@ DESIGN_SPEC ver2 기준. 정확한 hex/rgba를 CSS 변수로 고정하고 컴포
 | 자료 | 경로 |
 |------|------|
 | 작업 내역 | [CHANGELOG.md](./CHANGELOG.md) |
+| Map Studio 계획 | [docs/MAP_FEATURE_PLAN.md](./docs/MAP_FEATURE_PLAN.md) |
 | 디자인 스펙 | `docs/design_reference/handoff 3/DESIGN_SPEC.md` |
 | 화면 명세 | `docs/design_reference/handoff 3/SCREENS.md` |
 | 인터랙션 명세 | `docs/design_reference/handoff 3/INTERACTIONS.md` |
