@@ -4,6 +4,25 @@
 
 ---
 
+## [0.6.3] — 2026-06-08 · Map Studio M2.1 — 옵션·색상 커스터마이즈 + 초기화 안정화
+
+### Added — `js/mapStudio.jsx`
+- **포인트 색상 변경**: 철도·학교·병원·역 레이어별 컬러 피커(`input[type=color]`) → `setPaintProperty` 실시간 반영
+- **반경 5km 밖 포인트 클리핑** 옵션: 점에 거리(`_d`) 속성 부여 → `setFilter`로 원형 클리핑
+- **역 이름 라벨 상시 표시** 옵션: MapTiler 글리프 기반 symbol 레이어 (키 있을 때만)
+- **도로 클래스별 세분화** 토글: 고속도로/자동차전용/주간선/보조간선 개별 on/off (`setFilter`)
+- Overpass **엔드포인트 폴백**(de→private.coffee→mail.ru) + 요청 타임아웃(AbortController)
+
+### Fixed — `js/mapStudio.jsx`
+- **지도 초기화 간헐 실패 근본 해결**:
+  - 비동기 생성 중 **이중 맵 생성** → `initLockRef` 동기 잠금으로 차단
+  - maplibre `isStyleLoaded()`가 타일 로드 후에도 false를 반환하는 버그 → **probe 기반 준비 확인 + 재시도**로 setup/레이어 적용 보장
+
+### Changed
+- `index.html`: `mapStudio.jsx?v=18`
+
+---
+
 ## [0.6.2] — 2026-06-08 · Map Studio M2 — 학교·병원·역 포인트 레이어
 
 ### Added — `js/mapStudio.jsx`

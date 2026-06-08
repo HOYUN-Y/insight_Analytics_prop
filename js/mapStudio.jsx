@@ -28,11 +28,18 @@
 
   // 레이어 패널 정의 (선=막대, 점=동그라미)
   const LAYER_DEFS = [
-    { key: "rail",    label: "철도·지하철", color: "#c98bf0" },
-    { key: "road",    label: "주요도로",   color: "#fb8a44" },
-    { key: "school",  label: "학교",       color: "#79e0a8", dot: true },
-    { key: "medical", label: "병원·의원",  color: "#f08e86", dot: true },
-    { key: "station", label: "역·승강장",  color: "#7ba1fc", dot: true },
+    { key: "rail",    label: "철도·지하철", color: "#c98bf0", colorable: true },
+    { key: "road",    label: "주요도로",   color: "#fb8a44", isRoad: true },
+    { key: "school",  label: "학교",       color: "#79e0a8", dot: true, colorable: true },
+    { key: "medical", label: "병원·의원",  color: "#f08e86", dot: true, colorable: true },
+    { key: "station", label: "역·승강장",  color: "#7ba1fc", dot: true, colorable: true },
+  ];
+
+  const ROAD_CLASSES = [
+    { key: "motorway",  label: "고속도로", color: "#f08e86" },
+    { key: "trunk",     label: "자동차전용", color: "#fb8a44" },
+    { key: "primary",   label: "주간선",   color: "#e6b35a" },
+    { key: "secondary", label: "보조간선", color: "#c9cf60" },
   ];
 
   // 로컬 시크릿 로더 — keys.local.env (KEY=VALUE 형식, .gitignore 처리됨)
@@ -85,6 +92,7 @@
     const project = useStore((s) => s.projects.find((p) => p.id === s.activeProjectId) || s.projects[0]);
     const containerRef = React.useRef(null);
     const mapRef = React.useRef(null);
+    const initLockRef = React.useRef(false);
     const radiusMkRef = React.useRef([]);
     const [ready, setReady] = React.useState(false);
     const [err, setErr] = React.useState(null);
@@ -94,6 +102,11 @@
     const [osmLoading, setOsmLoading] = React.useState(false);
     const [osmErr, setOsmErr] = React.useState(null);
     const [layerVis, setLayerVis] = React.useState({ rail: true, road: true, school: true, medical: true, station: true });
+    const [colors, setColors] = React.useState({ rail: "#c98bf0", school: "#79e0a8", medical: "#f08e86", station: "#7ba1fc" });
+    const [clip, setClip] = React.useState(false);            // 반경 밖 포인트 숨김
+    const [stationLabels, setStationLabels] = React.useState(false); // 역 이름 상시 표시
+    const [roadSplit, setRoadSplit] = React.useState(false);  // 도로 클래스별 세분화
+    const [roadClasses, setRoadClasses] = React.useState({ motorway: true, trunk: true, primary: true, secondary: true });
 
     const coord = (project && project.coord) || { lat: 36.8389, lng: 127.1278 };
     const center = [coord.lng, coord.lat];
@@ -101,7 +114,8 @@
     // 지도 초기화 (1회) — 로컬 키 로드 후 빌드
     React.useEffect(() => {
       if (!window.maplibregl) { setErr("MapLibre GL 라이브러리가 로드되지 않았습니다."); return; }
-      if (mapRef.current || !containerRef.current) return;
+      if (mapRef.current || initLockRef.current || !containerRef.current) return;
+      initLockRef.current = true; // 비동기 생성 중 이중 마운트 방지 (동기 잠금)
 
       let cancelled = false, map, ro;
 
@@ -136,6 +150,8 @@
 
         const setup = () => {
           if (cancelled || setup._done) return;
+          try { map.addSource("__probe__", { type: "geojson", data: { type: "FeatureCollection", features: [] } }); map.removeSource("__probe__"); }
+          catch (_) { setTimeout(setup, 150); return; } // 아직 스타일 미준비 → 재시도
           setup._done = true;
           // 반경 동심원 (line) — 라벨은 글리프 폰트 의존이라 HTML 마커로 대체
           RADII.forEach((r) => {
@@ -173,9 +189,11 @@
           setReady(true);
         };
 
-        // load 이벤트가 누락되는 레이스 대비: 이미 로드됐으면 즉시, 아니면 load/idle 양쪽 대기
-        if (map.isStyleLoaded()) setup();
+        // isStyleLoaded()는 타일 로드 후에도 false를 반환하는 경우가 있어 신뢰 불가 →
+        // load/idle 이벤트로 setup 실행 + 안전망 타임아웃 (멱등 setup)
+        if (map.loaded()) setup();
         else { map.on("load", setup); map.once("idle", setup); }
+        setTimeout(setup, 2500); // 이벤트 누락 안전망
 
         map.on("error", (e) => { if (e && e.error) console.warn("[MapStudio]", e.error); });
       });
@@ -185,6 +203,7 @@
         try { if (ro) ro.disconnect(); } catch (_) {}
         try { if (map) map.remove(); } catch (_) {}
         mapRef.current = null;
+        initLockRef.current = false;
       };
     }, [coord.lat, coord.lng]);
 
@@ -230,9 +249,25 @@
         'node["station"="subway"](' + bbox + ");" +
         'node["railway"="subway_entrance"](' + bbox + ");" +
         ");out center tags;";
-      const ovp = (q) =>
-        fetch("https://overpass-api.de/api/interpreter", { method: "POST", body: "data=" + encodeURIComponent(q) })
-          .then((r) => (r.ok ? r.json() : Promise.reject(new Error("Overpass " + r.status))));
+      // 공개 인스턴스 과부하(504) 대비: 엔드포인트 순차 폴백
+      const ENDPOINTS = [
+        "https://overpass-api.de/api/interpreter",
+        "https://overpass.private.coffee/api/interpreter",
+        "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
+      ];
+      const fetchT = (url, body, ms) => {
+        const ac = new AbortController();
+        const t = setTimeout(() => ac.abort(), ms);
+        return fetch(url, { method: "POST", body, signal: ac.signal }).finally(() => clearTimeout(t));
+      };
+      const ovp = (q) => {
+        let i = 0;
+        const tryNext = () =>
+          fetchT(ENDPOINTS[i], "data=" + encodeURIComponent(q), 20000)
+            .then((r) => (r.ok ? r.json() : Promise.reject(new Error("Overpass " + r.status))))
+            .catch((err) => { i += 1; if (i < ENDPOINTS.length) return tryNext(); throw err; });
+        return tryNext();
+      };
 
       Promise.all([ovp(qLines), ovp(qPoints)])
         .then((jsons) => {
@@ -241,6 +276,11 @@
           const rail = fc(), road = fc(), school = fc(), medical = fc(), station = fc();
           const ptLngLat = (el) =>
             el.lat != null ? [el.lon, el.lat] : (el.center ? [el.center.lon, el.center.lat] : null);
+          const distKm = (lng, lat) => {
+            const dy = (lat - coord.lat) * 110.574;
+            const dx = (lng - coord.lng) * 111.320 * Math.cos((coord.lat * Math.PI) / 180);
+            return Math.sqrt(dx * dx + dy * dy);
+          };
           elements.forEach((el) => {
             const t = el.tags || {};
             // 선
@@ -253,7 +293,7 @@
             // 점
             const ll = ptLngLat(el);
             if (!ll) return;
-            const f = { type: "Feature", geometry: { type: "Point", coordinates: ll }, properties: { name: t.name || t["name:ko"] || "" } };
+            const f = { type: "Feature", geometry: { type: "Point", coordinates: ll }, properties: { name: t.name || t["name:ko"] || "", _d: distKm(ll[0], ll[1]) } };
             if (t.amenity === "school") school.features.push(f);
             else if (t.amenity === "hospital" || t.amenity === "clinic") medical.features.push(f);
             else if (t.railway === "station" || t.station === "subway" || t.railway === "subway_entrance") station.features.push(f);
@@ -295,10 +335,7 @@
           map.addLayer({
             id: "osm-rail-line", type: "line", source: "osm-rail",
             layout: { "line-cap": "round", "line-join": "round" },
-            paint: {
-              "line-color": ["match", ["get", "railway"], "subway", "#7ba1fc", "light_rail", "#7ba1fc", "tram", "#9b7bfc", "#c98bf0"],
-              "line-width": 2.4,
-            },
+            paint: { "line-color": colors.rail, "line-width": 2.4 },
           });
         }
 
@@ -322,11 +359,30 @@
           map.on("mouseenter", id + "-circle", () => { map.getCanvas().style.cursor = "pointer"; });
           map.on("mouseleave", id + "-circle", () => { map.getCanvas().style.cursor = ""; });
         };
-        pt("osm-school", osm.school, "#79e0a8", 4);
-        pt("osm-medical", osm.medical, "#f08e86", 4);
-        pt("osm-station", osm.station, "#7ba1fc", 5.5);
+        pt("osm-school", osm.school, colors.school, 4);
+        pt("osm-medical", osm.medical, colors.medical, 4);
+        pt("osm-station", osm.station, colors.station, 5.5);
+
+        // 역 이름 라벨 (MapTiler 글리프 필요 → 키 있을 때만)
+        if (tileMode === "maptiler" && !map.getLayer("osm-station-label")) {
+          map.addLayer({
+            id: "osm-station-label", type: "symbol", source: "osm-station",
+            layout: {
+              "text-field": ["get", "name"], "text-size": 11, "text-font": ["Noto Sans Regular"],
+              "text-offset": [0, 1.1], "text-anchor": "top", "text-optional": true,
+              "visibility": stationLabels ? "visible" : "none",
+            },
+            paint: { "text-color": colors.station, "text-halo-color": "#12151c", "text-halo-width": 1.4 },
+          });
+        }
       };
-      if (map.isStyleLoaded()) apply(); else map.once("idle", apply);
+      let alive = true;
+      const run = () => {
+        if (!alive) return;
+        try { apply(); } catch (_) { setTimeout(run, 150); } // 스타일 미준비 시 재시도
+      };
+      run();
+      return () => { alive = false; };
     }, [osm, ready]);
 
     // OSM 레이어 표시/숨김
@@ -339,7 +395,39 @@
       vis("osm-school-circle", layerVis.school);
       vis("osm-medical-circle", layerVis.medical);
       vis("osm-station-circle", layerVis.station);
-    }, [layerVis, ready, osm]);
+      vis("osm-station-label", layerVis.station && stationLabels);
+    }, [layerVis, ready, osm, stationLabels]);
+
+    // 색상 변경 반영
+    React.useEffect(() => {
+      const map = mapRef.current;
+      if (!map || !ready) return;
+      const setC = (layerId, prop, c) => { if (map.getLayer(layerId)) map.setPaintProperty(layerId, prop, c); };
+      setC("osm-rail-line", "line-color", colors.rail);
+      setC("osm-school-circle", "circle-color", colors.school);
+      setC("osm-medical-circle", "circle-color", colors.medical);
+      setC("osm-station-circle", "circle-color", colors.station);
+      setC("osm-station-label", "text-color", colors.station);
+    }, [colors, ready, osm]);
+
+    // 반경(5km) 밖 포인트 클리핑
+    React.useEffect(() => {
+      const map = mapRef.current;
+      if (!map || !ready) return;
+      const flt = clip ? ["<=", ["get", "_d"], 5] : null;
+      ["osm-school-circle", "osm-medical-circle", "osm-station-circle", "osm-station-label"].forEach((id) => {
+        if (map.getLayer(id)) map.setFilter(id, flt);
+      });
+    }, [clip, ready, osm]);
+
+    // 도로 클래스별 필터
+    React.useEffect(() => {
+      const map = mapRef.current;
+      if (!map || !ready || !map.getLayer("osm-road-line")) return;
+      if (!roadSplit) { map.setFilter("osm-road-line", null); return; }
+      const active = Object.keys(roadClasses).filter((k) => roadClasses[k]);
+      map.setFilter("osm-road-line", ["in", ["get", "highway"], ["literal", active]]);
+    }, [roadSplit, roadClasses, ready, osm]);
 
     return (
       <div className="ms-root">
@@ -376,11 +464,37 @@
             {osm && (
               <div className="ms-lyr-list">
                 {LAYER_DEFS.map((ld) => (
-                  <label className="ms-lyr" key={ld.key}>
-                    <input type="checkbox" checked={layerVis[ld.key]} onChange={() => setLayerVis((v) => ({ ...v, [ld.key]: !v[ld.key] }))} />
-                    <span className={"ms-lyr-sw" + (ld.dot ? " dot" : "")} style={{ background: ld.color }} />{ld.label} <em>{osm.counts[ld.key]}</em>
-                  </label>
+                  <div key={ld.key}>
+                    <div className="ms-lyr-row">
+                      <label className="ms-lyr">
+                        <input type="checkbox" checked={layerVis[ld.key]} onChange={() => setLayerVis((v) => ({ ...v, [ld.key]: !v[ld.key] }))} />
+                        <span className={"ms-lyr-sw" + (ld.dot ? " dot" : "")} style={{ background: ld.colorable ? colors[ld.key] : ld.color }} />{ld.label} <em>{osm.counts[ld.key]}</em>
+                      </label>
+                      {ld.colorable && (
+                        <input type="color" className="ms-color" value={colors[ld.key]} title="색 변경"
+                          onChange={(e) => setColors((c) => ({ ...c, [ld.key]: e.target.value }))} />
+                      )}
+                      {ld.isRoad && (
+                        <button className={"ms-mini" + (roadSplit ? " on" : "")} title="도로 클래스별" onClick={() => setRoadSplit((x) => !x)}>⋯</button>
+                      )}
+                    </div>
+                    {ld.isRoad && roadSplit && (
+                      <div className="ms-subclasses">
+                        {ROAD_CLASSES.map((rc) => (
+                          <label className="ms-sub" key={rc.key}>
+                            <input type="checkbox" checked={roadClasses[rc.key]} onChange={() => setRoadClasses((v) => ({ ...v, [rc.key]: !v[rc.key] }))} />
+                            <span className="ms-lyr-sw" style={{ background: rc.color }} />{rc.label}
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 ))}
+
+                <div className="ms-opts">
+                  <label className="ms-opt"><input type="checkbox" checked={clip} onChange={() => setClip((x) => !x)} />반경 5km 밖 숨기기</label>
+                  <label className="ms-opt"><input type="checkbox" checked={stationLabels} onChange={() => setStationLabels((x) => !x)} />역 이름 표시</label>
+                </div>
                 <div className="ms-lyr-src">출처: © OpenStreetMap</div>
               </div>
             )}

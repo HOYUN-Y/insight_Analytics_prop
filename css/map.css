@@ -118,3 +118,27 @@
 .ms-lyr-err { background: rgba(18,21,28,.92); border: 1px solid var(--neg); color: var(--neg); font-size: var(--fs-11); padding: 6px 9px; border-radius: 8px; }
 
 .ms-lyr-sw.dot { width: 10px; height: 10px; border-radius: 50%; }
+
+/* Map Studio M2.1 — 색상·옵션 컨트롤 */
+.ms-lyr-row { display: flex; align-items: center; gap: 6px; }
+.ms-lyr-row .ms-lyr { flex: 1; }
+.ms-color {
+  width: 20px; height: 18px; padding: 0; border: 1px solid var(--bg-3);
+  border-radius: 4px; background: none; cursor: pointer; flex: 0 0 auto;
+}
+.ms-color::-webkit-color-swatch-wrapper { padding: 1px; }
+.ms-color::-webkit-color-swatch { border: none; border-radius: 3px; }
+.ms-mini {
+  flex: 0 0 auto; width: 20px; height: 18px; line-height: 1; font-size: 13px;
+  color: var(--tx-mid); background: var(--bg-2); border: 1px solid var(--bg-3);
+  border-radius: 4px; cursor: pointer; padding: 0;
+}
+.ms-mini.on { color: var(--accent); border-color: var(--accent); }
+.ms-subclasses {
+  display: flex; flex-direction: column; gap: 4px;
+  margin: 4px 0 6px 18px; padding-left: 8px; border-left: 1px solid var(--bg-3);
+}
+.ms-sub { display: flex; align-items: center; gap: 6px; font-size: var(--fs-11); color: var(--tx-mid); cursor: pointer; }
+.ms-opts { display: flex; flex-direction: column; gap: 5px; margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--bg-2); }
+.ms-opt { display: flex; align-items: center; gap: 7px; font-size: var(--fs-11); color: var(--tx-mid); cursor: pointer; }
+.ms-opt input, .ms-sub input { accent-color: var(--accent); }
