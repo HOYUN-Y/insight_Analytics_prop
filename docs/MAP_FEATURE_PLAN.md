@@ -152,9 +152,22 @@
 
 ---
 
+## 7.5 API 키 보관 규약 (확정)
+
+- 키는 프로젝트 루트의 **`keys.local.env`** 에 `KEY=VALUE` 형식으로 보관 (한 줄당 하나)
+  ```
+  MAPTILER_KEY=xxxxxxxxxxxx
+  # 향후: VWORLD_KEY=..., NAVER_CLIENT_ID=... 등 추가
+  ```
+- **`.gitignore`에 등록되어 절대 커밋되지 않음** (`keys.local.env`, `*.local.env`, `.env*`)
+- 앱은 런타임에 `fetch("keys.local.env")` 로 읽어 파싱 (빌드 없음 환경 대응) — `js/mapStudio.jsx`의 `loadKeys()`
+- 키 부재 시 OSM 래스터로 자동 폴백 → 키 없이도 동작
+
+---
+
 ## 8. 미해결/결정 필요 사항
 
-- [ ] API 키 발급·보관 방식 (VWorld/MapTiler) — 로컬 설정 파일?
+- [x] ~~API 키 발급·보관 방식~~ → `keys.local.env` 규약 확정 (7.5 참조)
 - [ ] Overpass 공개 인스턴스 rate limit 대응 (캐시 정책)
 - [ ] 기존 `mapMode.jsx`를 확장할지, Map Studio로 신규 구성할지
 - [ ] 오프라인 정책: 타일 캐시 범위 어디까지

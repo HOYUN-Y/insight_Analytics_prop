@@ -24,8 +24,14 @@
 - 미리보기로 천안 성성동 OSM 타일·핀·동심원·토글 렌더 확인 (캔버스 713px 정상)
 - 트러블슈팅: ① 라벨 symbol 레이어 glyphs 의존 → HTML 마커로 대체 ② maplibre-gl.css가 컨테이너 position:relative 강제 → 명시적 100% 높이로 해결
 
+### Added — 로컬 키 로더 + MapTiler 전환 (M0.1)
+- `keys.local.env`(KEY=VALUE, **.gitignore 처리**)에서 런타임 `fetch`로 키 로드
+- `MAPTILER_KEY` 있으면 **MapTiler streets-v2 벡터 타일**, 없으면 OSM 래스터 폴백
+- 푸터에 현재 타일 소스 표시 / `.gitignore`에 `*.local.env`·`.env*` 등 시크릿 패턴 추가
+- 미리보기 검증: MapTiler 벡터 타일 + 동심원 정상 렌더 확인
+
 ### 다음 (M1~)
-- VWorld/MapTiler 타일 전환(키), Overpass 철도·도로 추출·레이어, PPT 익스포트 — docs/MAP_FEATURE_PLAN.md
+- Overpass 철도·도로 추출·레이어, VWorld 지적도, PPT 익스포트 — docs/MAP_FEATURE_PLAN.md
 
 ---
 

@@ -2,3 +2,10 @@
 .claude/
 node_modules/
 *.log
+
+# 로컬 시크릿 (API 키 등) — 절대 커밋 금지
+keys.local.env
+*.local.env
+key.env*
+.env
+.env.*
