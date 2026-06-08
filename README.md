@@ -139,7 +139,8 @@ insight_Analytics_prop/
 │   ├── dataMode.jsx        데이터셋 탐색·프로파일링
 │   ├── cleanMode.jsx       전처리 파이프라인
 │   ├── vizMode.jsx         ECharts 시각화 빌더
-│   ├── mapMode.jsx         입지 지도
+│   ├── mapMode.jsx         입지 지도 (ECharts 분포)
+│   ├── mapStudio.jsx       Map Studio — MapLibre 지도·반경·레이어 (M0~)
 │   └── dashMode.jsx        대시보드
 │
 └── docs/
@@ -177,7 +178,7 @@ DESIGN_SPEC ver2 기준. 정확한 hex/rgba를 CSS 변수로 고정하고 컴포
 | **0 · 셋업** | 브랜드 토큰, 셸, Rail, 스토어 기반 | ✅ 완료 |
 | **1 · Planning Core** | 3-뷰 전환, 11페이지, 인사이트/의사결정/출처/Report Builder | ✅ 완료 |
 | **2 · 뷰 고도화** | 보드 뷰 수평 마인드맵·플로팅 툴바, 대시보드 뷰 세부화 | 🔄 다음 단계 |
-| **2 · Map Studio** | 지도 레이어 시각화(지하철·도로·POI) + 반경 추출 + PPT 익스포트 ([계획](./docs/MAP_FEATURE_PLAN.md)) | 📋 계획 수립 |
+| **2 · Map Studio** | M0 ✅ MapLibre+MapTiler 지도·단지 핀·반경(2/3/5km) / M1~ 철도·도로 레이어·PPT 익스포트 ([계획](./docs/MAP_FEATURE_PLAN.md)) | 🔄 진행 중 |
 | **3 · 분석** | 비교사례지수 빌더, 분양가 산정, Map 재구성 | ⬜ Phase 2 |
 | **4 · 고도화** | API Hub, Mind Map 인터랙티브, 프로젝트 JSON 내보내기 | ⬜ Phase 3 |
 
